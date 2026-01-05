@@ -1,10 +1,10 @@
-# Smart Record Keeper - Plain HTML/CSS/JavaScript Version
+# KARIBU GROCERIES .LTD - Plain HTML/CSS/JavaScript Version
 
-This is a simplified version of the Smart Record Keeper application converted from React to plain HTML, CSS, and JavaScript for easier understanding.
+This is a simplified version of the KARIBU GROCERIES .LTD application converted from React to plain HTML, CSS, and JavaScript for easier understanding.
 
 ## Files Structure
 
-- **index-simple.html** - Main HTML file with all the app structure
+- **index.html** - Main HTML file with all the app structure
 - **styles.css** - All styling and layout
 - **app.js** - JavaScript functionality and interactivity
 
@@ -23,11 +23,11 @@ This is a simplified version of the Smart Record Keeper application converted fr
 
 ## How to Run
 
-1. **Simple Method**: Double-click `index-simple.html` to open in your browser
+1. **Simple Method**: Double-click `index.html` to open in your browser
 2. **Better Method**: Use a local server (recommended for best experience)
    - If you have Python: `python -m http.server 8000`
    - If you have Node.js: `npx http-server`
-   - Then visit `http://localhost:8000/index-simple.html`
+   - Then visit `http://localhost:8000/index.html`
 
 ## How to Use
 
@@ -55,7 +55,7 @@ This is a simplified version of the Smart Record Keeper application converted fr
 
 ## Code Structure Explained
 
-### HTML (index-simple.html)
+### HTML (index.html)
 The HTML file contains three main sections:
 - **Login Page** (`#loginPage`) - Login form
 - **Dashboard Page** (`#dashboardPage`) - Statistics and action buttons  

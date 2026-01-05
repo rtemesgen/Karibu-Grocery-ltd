@@ -46,10 +46,42 @@ class StockManager {
 
         if (this.currentEditId) {
             const index = this.stockItems.findIndex(item => item.id === this.currentEditId);
+            // compute quantity increase for procurement transaction
+            const prev = this.stockItems[index];
+            const qtyDelta = formData.quantity - (prev.quantity || 0);
             this.stockItems[index] = formData;
+
+            if (qtyDelta > 0) {
+                try {
+                    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+                    const amount = qtyDelta * (formData.costPrice || 0);
+                    const txs = JSON.parse(localStorage.getItem('transactions') || '[]');
+                    txs.unshift({ id: Date.now().toString(), date: new Date().toISOString().slice(0,10), type: 'procurement', amount: amount, account: 'bank', description: `Procurement - ${formData.name} (qty ${qtyDelta})`, user: currentUser ? currentUser.username : 'System' });
+                    localStorage.setItem('transactions', JSON.stringify(txs));
+
+                    const acts = JSON.parse(localStorage.getItem('activityLog') || '[]');
+                    acts.unshift({ id: Date.now().toString(), action: 'procurement', data: { itemId: formData.id, qty: qtyDelta, amount }, user: currentUser ? currentUser.username : 'System', timestamp: new Date().toISOString() });
+                    localStorage.setItem('activityLog', JSON.stringify(acts));
+                } catch (e) { console.warn('Could not write procurement transaction/activity', e); }
+            }
+
             this.showNotification('Item updated successfully', 'success');
         } else {
             this.stockItems.push(formData);
+
+            // record procurement transaction for initial stock
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+                const amount = (formData.quantity || 0) * (formData.costPrice || 0);
+                const txs = JSON.parse(localStorage.getItem('transactions') || '[]');
+                txs.unshift({ id: Date.now().toString(), date: new Date().toISOString().slice(0,10), type: 'procurement', amount: amount, account: 'bank', description: `Procurement - ${formData.name} (initial qty ${formData.quantity})`, user: currentUser ? currentUser.username : 'System' });
+                localStorage.setItem('transactions', JSON.stringify(txs));
+
+                const acts = JSON.parse(localStorage.getItem('activityLog') || '[]');
+                acts.unshift({ id: Date.now().toString(), action: 'procurement', data: { itemId: formData.id, qty: formData.quantity, amount }, user: currentUser ? currentUser.username : 'System', timestamp: new Date().toISOString() });
+                localStorage.setItem('activityLog', JSON.stringify(acts));
+            } catch (e) { console.warn('Could not write procurement transaction/activity', e); }
+
             this.showNotification('Item added successfully', 'success');
         }
 

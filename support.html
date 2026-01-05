@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Support Center - Smart Record Keeper</title>
+    <title>Support Center - KARIBU GROCERIES .LTD</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css.min.css">
 </head>
@@ -13,13 +13,13 @@
             <div class="profile-section">
                 <div class="profile-avatar"></div>
                 <div class="profile-info">
-                    <h3>Manager</h3>
-                    <p>Imani Frank</p>
+                    <h3 id="profileRole">Guest</h3>
+                    <p id="profileName">Not logged in</p>
                 </div>
             </div>
             <nav class="sidebar-nav">
                 <ul class="nav-menu">
-                    <li class="nav-item"><a href="index-simple.html" class="nav-link"><span class="nav-icon"></span><span>Accounts</span></a></li>
+                    <li class="nav-item"><a href="accounts.html" class="nav-link"><span class="nav-icon"></span><span>Accounts</span></a></li>
                     <li class="nav-item"><a href="sales.html" class="nav-link"><span class="nav-icon"></span><span>Sales track</span></a></li>
                     <li class="nav-item"><a href="stock.html" class="nav-link"><span class="nav-icon"></span><span>Stock</span></a></li>
                     <li class="nav-item"><a href="invoices.html" class="nav-link"><span class="nav-icon"></span><span>Invoices</span></a></li>
@@ -29,7 +29,6 @@
                     <li class="nav-item active"><a href="support.html" class="nav-link"><span class="nav-icon"></span><span>Support</span></a></li>
                 </ul>
             </nav>
-            <button class="sidebar-logout" onclick="window.location.href='index-simple.html'"><i class="fas fa-sign-out-alt"></i></button>
         </div>
         
         <div class="main-content">
@@ -38,6 +37,7 @@
                 <div class="header-actions">
                     <button id="contactSupportBtn" class="btn-primary"><i class="fas fa-headset"></i> Contact Support</button>
                     <button id="newTicketBtn" class="btn-secondary"><i class="fas fa-ticket-alt"></i> New Ticket</button>
+                    <button class="btn-secondary" onclick="handleGlobalLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</button>
                 </div>
             </div>
 
@@ -208,5 +208,6 @@
         </div>
     </div>
     <script src="support.js"></script>
+    <script src="profile.js"></script>
 </body>
 </html>

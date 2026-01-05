@@ -116,18 +116,62 @@ class ReportsManager {
     }
 
     generateReportCSV(report) {
+        // Read transactions (single source of truth for financials)
+        const txs = JSON.parse(localStorage.getItem('transactions') || '[]');
+        const start = report.startDate ? new Date(report.startDate) : null;
+        // include the entire end day
+        const end = report.endDate ? new Date(report.endDate + 'T23:59:59') : null;
+
+        // helper to filter by date range when provided
+        const inRange = (d) => {
+            if(!d) return false;
+            const dt = new Date(d);
+            if(start && dt < start) return false;
+            if(end && dt > end) return false;
+            return true;
+        };
+
+        // Build CSV rows depending on report type
+        if(report.type === 'sales'){
+            const sales = txs.filter(t => (t.type === 'sale' || t.type === 'invoice-payment') && inRange(t.date));
+            const headers = ['Date','Description','Amount','User'];
+            const rows = sales.map(s => [s.date, `"${(s.description||'').replace(/"/g,'""')}"`, (s.amount||0).toFixed ? (s.amount||0).toFixed(2) : s.amount, s.user||'']);
+            let csv = headers.join(',') + '\n';
+            csv += rows.map(r => r.join(',')).join('\n');
+            return csv;
+        }
+
+        if(report.type === 'financial'){
+            const list = txs.filter(t => inRange(t.date));
+            const headers = ['Date','Type','Description','Amount','Account','User'];
+            const rows = list.map(t => [t.date, t.type, `"${(t.description||'').replace(/"/g,'""') }"`, (t.amount||0).toFixed ? (t.amount||0).toFixed(2) : t.amount, t.account||'', t.user||'']);
+            let csv = headers.join(',') + '\n';
+            csv += rows.map(r => r.join(',')).join('\n');
+
+            // Add a basic totals line
+            const total = list.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+            csv += '\n' + `Total,,,$${total.toFixed(2)}`;
+            return csv;
+        }
+
+        if(report.type === 'inventory'){
+            const proc = txs.filter(t => t.type === 'procurement' && inRange(t.date));
+            const headers = ['Date','Description','Amount','User'];
+            const rows = proc.map(p => [p.date, `"${(p.description||'').replace(/"/g,'""') }"`, (p.amount||0).toFixed(2), p.user||'']);
+            let csv = headers.join(',') + '\n';
+            csv += rows.map(r => r.join(',')).join('\n');
+            return csv;
+        }
+
+        // Fallback: return a small financial summary if type is unknown
         const headers = ['Date', 'Description', 'Amount', 'Category'];
         const sampleData = [
             ['2025-12-01', 'Product Sale - Widget A', '1500.00', 'Sales'],
-            ['2025-12-02', 'Office Supplies', '-250.00', 'Expenses'],
-            ['2025-12-03', 'Service Revenue', '2200.00', 'Sales'],
-            ['2025-12-04', 'Marketing Campaign', '-800.00', 'Marketing'],
-            ['2025-12-05', 'Product Sale - Widget B', '1800.00', 'Sales']
+            ['2025-12-02', 'Office Supplies', '-250.00', 'Expenses']
         ];
 
         let csv = headers.join(',') + '\n';
         csv += sampleData.map(row => row.join(',')).join('\n');
-        
         return csv;
     }
 

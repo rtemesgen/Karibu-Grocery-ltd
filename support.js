@@ -38,7 +38,7 @@ class SupportManager {
     openArticle(articleId) {
         const articles = {
             'setup': 'Initial Setup Guide',
-            'first-steps': 'Your First Steps with Smart Record Keeper',
+            'first-steps': 'Your First Steps with KARIBU GROCERIES .LTD',
             'navigation': 'Navigating the Dashboard',
             'add-sale': 'How to Add Sales Records',
             'track-inventory': 'Inventory Tracking Best Practices',

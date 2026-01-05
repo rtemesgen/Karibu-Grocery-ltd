@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Record Keeper</title>
+    <title>Karibu Groceries LTD.</title>
     <link rel="stylesheet" href="styles.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -15,9 +15,9 @@
             <!-- Left Panel - Branding -->
             <div class="login-left-panel">
                 <div class="branding">
-                    <h1>SMART</h1>
+                    <h1>KARIBU</h1>
                     <div class="divider"></div>
-                    <h2>RECORD KEEPER</h2>
+                    <h2>Groceries LTD.</h2>
                 </div>
             </div>
             
@@ -31,7 +31,7 @@
                         <input type="text" id="username" placeholder="User name" required>
                         <input type="password" id="password" placeholder="Password" required>
                         
-                        <button type="submit" class="welcome-btn">welcome</button>
+                        <button type="submit" class="login-btn">Welcome</button>
                     </form>
                 </div>
             </div>
@@ -47,8 +47,8 @@
                 <div class="profile-section">
                     <div class="profile-avatar"></div>
                     <div class="profile-info">
-                        <h3>Manager</h3>
-                        <p>Imani Frank</p>
+                        <h3 id="profileRole">Guest</h3>
+                        <p id="profileName">Not logged in</p>
                     </div>
                 </div>
                 
@@ -56,7 +56,7 @@
                 <nav class="sidebar-nav">
                     <ul class="nav-menu">
                         <li class="nav-item active">
-                            <a href="#" class="nav-link" onclick="event.preventDefault()">
+                            <a href="accounts.html" class="nav-link">
                                 <span class="nav-icon"></span>
                                 <span>Accounts</span>
                             </a>
@@ -98,6 +98,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="users.html" class="nav-link">
+                                <span class="nav-icon"></span>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="support.html" class="nav-link">
                                 <span class="nav-icon"></span>
                                 <span>Support</span>
@@ -105,18 +111,16 @@
                         </li>
                     </ul>
                 </nav>
-                
-                <!-- Logout Button -->
-                <button id="logoutBtn" class="sidebar-logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
             </div>
             
             <!-- Main Content -->
             <div class="main-content">
                 <!-- Search Bar -->
-                <div class="search-section">
+                <div class="search-section" style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
                     <input type="text" class="main-search" placeholder="Search...">
+                    <div class="header-actions">
+                        <button class="btn-secondary" onclick="handleGlobalLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
                 </div>
                 
                 <!-- Dashboard Cards -->
@@ -168,7 +172,7 @@
                     <span>Back to Dashboard</span>
                 </button>
                 <h1 class="nav-title">Records</h1>
-                <button id="logoutBtn2" class="btn-logout">
+                <button id="logoutBtn2" class="btn-logout" onclick="handleGlobalLogout(event)">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </button>

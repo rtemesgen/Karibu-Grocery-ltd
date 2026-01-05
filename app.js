@@ -1,4 +1,4 @@
-// Smart Record Keeper - JavaScript Application
+// KARIBU GROCERIES .LTD - JavaScript Application
 class RecordKeeper {
     constructor() {
         this.currentView = 'login';
@@ -11,77 +11,77 @@ class RecordKeeper {
 
     // Initialize the application
     init() {
+        // Ensure default users exist before any login attempts
+        this.seedDefaultUsersIfNeeded();
+
         this.setupEventListeners();
         this.showPage('loginPage');
         this.updateStats();
         this.initializeSalesData();
         this.setupTabNavigation();
+        this.loadCurrentUser();
+        this.updateProfileUI();
+        // Backfill transactions and ensure dashboard reflects ledger data
+        this.migrateTransactionsFromModules();
     }
 
     // Setup all event listeners
     setupEventListeners() {
+        const byId = (id) => document.getElementById(id);
+
         // Login form
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleLogin();
-        });
+        const loginForm = byId('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleLogin();
+            });
+        }
 
-        // Logout buttons
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            this.handleLogout();
-        });
-        document.getElementById('logoutBtn2').addEventListener('click', () => {
-            this.handleLogout();
-        });
+        // Logout buttons (only attach if present)
+        const lb = byId('logoutBtn');
+        if (lb) lb.addEventListener('click', () => { this.handleLogout(); });
+        const lb2 = byId('logoutBtn2');
+        if (lb2) lb2.addEventListener('click', () => { this.handleLogout(); });
 
-        // Navigation buttons
-        document.getElementById('addRecordBtn').addEventListener('click', () => {
-            this.showAddRecordModal();
-        });
-        document.getElementById('viewRecordsBtn').addEventListener('click', () => {
-            this.showRecordsPage();
-        });
-        document.getElementById('backToDashboard').addEventListener('click', () => {
-            this.showDashboard();
-        });
-        document.getElementById('addRecordFromList').addEventListener('click', () => {
-            this.showAddRecordModal();
-        });
+        // Navigation buttons (guarded)
+        const addRecordBtn = byId('addRecordBtn');
+        if (addRecordBtn) addRecordBtn.addEventListener('click', () => { this.showAddRecordModal(); });
+
+        const viewRecordsBtn = byId('viewRecordsBtn');
+        if (viewRecordsBtn) viewRecordsBtn.addEventListener('click', () => { this.showRecordsPage(); });
+
+        const backToDashboard = byId('backToDashboard');
+        if (backToDashboard) backToDashboard.addEventListener('click', () => { this.showDashboard(); });
+
+        const addRecordFromList = byId('addRecordFromList');
+        if (addRecordFromList) addRecordFromList.addEventListener('click', () => { this.showAddRecordModal(); });
 
         // Modal controls
-        document.getElementById('closeModal').addEventListener('click', () => {
-            this.hideModal();
-        });
-        document.getElementById('cancelRecord').addEventListener('click', () => {
-            this.hideModal();
-        });
+        const closeModal = byId('closeModal');
+        if (closeModal) closeModal.addEventListener('click', () => { this.hideModal(); });
+
+        const cancelRecord = byId('cancelRecord');
+        if (cancelRecord) cancelRecord.addEventListener('click', () => { this.hideModal(); });
 
         // Record form
-        document.getElementById('recordForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleRecordSubmit();
-        });
+        const recordForm = byId('recordForm');
+        if (recordForm) recordForm.addEventListener('submit', (e) => { e.preventDefault(); this.handleRecordSubmit(); });
 
         // Category change for amount field visibility
-        document.getElementById('recordCategory').addEventListener('change', (e) => {
-            this.toggleAmountField(e.target.value);
-        });
+        const recordCategory = byId('recordCategory');
+        if (recordCategory) recordCategory.addEventListener('change', (e) => { this.toggleAmountField(e.target.value); });
 
         // Search and filter
-        document.getElementById('searchRecords').addEventListener('input', (e) => {
-            this.filterRecords();
-        });
-        document.getElementById('categoryFilter').addEventListener('change', () => {
-            this.filterRecords();
-        });
+        const searchRecords = byId('searchRecords');
+        if (searchRecords) searchRecords.addEventListener('input', (e) => { this.filterRecords(); });
+
+        const categoryFilter = byId('categoryFilter');
+        if (categoryFilter) categoryFilter.addEventListener('change', () => { this.filterRecords(); });
 
         // Click outside modal to close
-        document.getElementById('recordModal').addEventListener('click', (e) => {
-            if (e.target === e.currentTarget) {
-                this.hideModal();
-            }
-        });
-
+        const recordModal = byId('recordModal');
+        if (recordModal) recordModal.addEventListener('click', (e) => { if (e.target === e.currentTarget) this.hideModal(); });
     }
 
     // Initial sample records
@@ -146,26 +146,86 @@ class RecordKeeper {
 
     // Login functionality
     handleLogin() {
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
 
-        if (username.trim() && password.trim()) {
-            this.isLoggedIn = true;
-            this.showDashboard();
-            
-            // Clear form
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-        } else {
+        if (!username || !password) {
             alert('Please enter both username and password');
+            return;
         }
+
+        // Try to validate against stored users
+        let users = [];
+        try{ users = JSON.parse(localStorage.getItem('users')) || []; }catch(e){ users = []; }
+        console.log('Attempting login for', username, 'usersCount=', users.length);
+        const match = users.find(u => u.username === username && u.password === password);
+        console.log('Login match:', match);
+        if (!match) {
+            alert('Invalid credentials');
+            return;
+        }
+
+        // Successful login: assign role and persist
+        this.isLoggedIn = true;
+        this.currentUser = { username: match.username, role: match.role };
+        this.saveCurrentUser();
+
+        // Update UI
+        this.updateProfileUI();
+        this.showDashboard();
+
+        // Clear form
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
     }
 
     // Logout functionality
     handleLogout() {
         this.isLoggedIn = false;
         this.currentView = 'login';
+        this.clearCurrentUser();
         this.showPage('loginPage');
+        this.updateProfileUI();
+    }
+
+    // ----- Users & Current User storage (role support) -----
+    seedDefaultUsersIfNeeded() {
+        try {
+            const raw = localStorage.getItem('users');
+            const users = raw ? JSON.parse(raw) : null;
+            if(!users || users.length === 0){
+                const seed = [
+                    { username: 'admin', password: 'admin', role: 'admin' },
+                    { username: 'manager', password: 'manager', role: 'manager' },
+                    { username: 'cashier', password: 'cashier', role: 'cashier' }
+                ];
+                localStorage.setItem('users', JSON.stringify(seed));
+            }
+        } catch(e){ console.warn('Could not seed users', e); }
+    }
+
+    loadCurrentUser() {
+        try{
+            this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        }catch(e){ this.currentUser = null; }
+    }
+
+    saveCurrentUser() {
+        if(this.currentUser) localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+    }
+
+    clearCurrentUser() {
+        localStorage.removeItem('currentUser');
+        this.currentUser = null;
+    }
+
+    updateProfileUI(){
+        try{
+            const roleEl = document.getElementById('profileRole');
+            const nameEl = document.getElementById('profileName');
+            if(roleEl) roleEl.textContent = this.currentUser ? this.currentUser.role.toUpperCase() : 'Guest';
+            if(nameEl) nameEl.textContent = this.currentUser ? this.currentUser.username : 'Not logged in';
+        }catch(e){ }
     }
 
     // Show dashboard
@@ -631,6 +691,27 @@ class RecordKeeper {
     // Show Sales Track section
     showSalesTrackSection() {
         const mainContent = document.querySelector('.main-content');
+
+        // Compute sales totals from transactions (single source of truth)
+        const today = new Date();
+        const todayStr = today.toISOString().slice(0,10);
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0,10);
+
+        const todaySales = this.computeSalesTotal(todayStr, todayStr);
+        const monthSales = this.computeSalesTotal(startOfMonth, todayStr);
+
+        // previous month for growth calculation
+        const prevMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const prevMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+        const prevStartStr = prevMonthStart.toISOString().slice(0,10);
+        const prevEndStr = prevMonthEnd.toISOString().slice(0,10);
+        const prevMonthSales = this.computeSalesTotal(prevStartStr, prevEndStr);
+
+        const growthRate = prevMonthSales ? ((monthSales - prevMonthSales) / Math.abs(prevMonthSales)) * 100 : 0;
+        const growthLabel = `${growthRate >= 0 ? '+' : ''}${growthRate.toFixed(1)}%`;
+
+        function fmt(v){ return `$${v.toLocaleString(undefined, {maximumFractionDigits:2, minimumFractionDigits:0})}`; }
+
         mainContent.innerHTML = `
             <div class="section-header">
                 <h1>Sales Tracking</h1>
@@ -639,15 +720,15 @@ class RecordKeeper {
             <div class="sales-metrics">
                 <div class="metric-card">
                     <h3>Today's Sales</h3>
-                    <p class="metric-value">$12,450</p>
+                    <p class="metric-value">${fmt(todaySales)}</p>
                 </div>
                 <div class="metric-card">
                     <h3>This Month</h3>
-                    <p class="metric-value">$245,670</p>
+                    <p class="metric-value">${fmt(monthSales)}</p>
                 </div>
                 <div class="metric-card">
                     <h3>Growth Rate</h3>
-                    <p class="metric-value">+15.3%</p>
+                    <p class="metric-value">${growthLabel}</p>
                 </div>
             </div>
             <div class="sales-chart-placeholder">
@@ -909,7 +990,76 @@ function validatePhone(phone) {
     return re.test(phone.replace(/\s/g, ''));
 }
 
-// Export for potential future use
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = RecordKeeper;
+// -----------------------
+// Short migration helpers
+// -----------------------
+
+// Return transactions array from localStorage
+function getStoredTransactions(){
+    try { return JSON.parse(localStorage.getItem('transactions') || '[]'); } catch(e) { return []; }
 }
+
+function saveStoredTransactions(txs){
+    try { localStorage.setItem('transactions', JSON.stringify(txs || [])); } catch(e) { console.warn('Could not save transactions', e); }
+}
+
+function addStoredTransaction(tx){
+    try {
+        const txs = getStoredTransactions();
+        txs.unshift(tx);
+        saveStoredTransactions(txs);
+    } catch(e){ console.warn('Could not add transaction', e); }
+}
+
+function addActivityLog(action, data){
+    try{
+        const a = JSON.parse(localStorage.getItem('activityLog') || '[]');
+        a.unshift({ id: Date.now().toString(), action, data: data||{}, user:(JSON.parse(localStorage.getItem('currentUser'))||{}).username || 'System', timestamp: new Date().toISOString() });
+        localStorage.setItem('activityLog', JSON.stringify(a));
+    }catch(e){ console.warn('Could not add activity', e); }
+}
+
+// Idempotent migration to backfill transactions from in-memory modules
+RecordKeeper.prototype.migrateTransactionsFromModules = function(){
+    try{
+        const txs = getStoredTransactions();
+        let added = 0;
+
+        // helper: check existing by type+amount+date
+        const exists = (type, amount, dateStr, descFragment) => txs.some(t=> t.type===type && Math.abs((parseFloat(t.amount)||0) - (parseFloat(amount)||0)) < 0.01 && t.date === dateStr && (descFragment ? (t.description||'').includes(descFragment) : true));
+
+        // backfill sales
+        if(window.salesManager && Array.isArray(window.salesManager.sales)){
+            window.salesManager.sales.forEach(sale => {
+                const date = sale.saleDate || new Date().toISOString().slice(0,10);
+                if(!exists('sale', sale.total, date, sale.itemName)){
+                    const tx = { id: Date.now().toString() + Math.random().toString(36).slice(2,6), date, type: 'sale', amount: sale.total, account: 'cash', description: `Sale: ${sale.itemName}`, user: (JSON.parse(localStorage.getItem('currentUser'))||{}).username || 'System' };
+                    txs.unshift(tx); added++; addActivityLog('migration-add-transaction', { source: 'sales', amount: sale.total, id: tx.id });
+                }
+            });
+        }
+
+        // backfill paid invoices
+        if(window.invoiceManager && Array.isArray(window.invoiceManager.invoices)){
+            window.invoiceManager.invoices.forEach(inv => {
+                if(inv.status === 'paid'){
+                    const date = inv.paidDate ? new Date(inv.paidDate).toISOString().slice(0,10) : (inv.invoiceDate || new Date().toISOString().slice(0,10));
+                    if(!exists('invoice-payment', inv.total, date, inv.number)){
+                        const tx = { id: Date.now().toString() + Math.random().toString(36).slice(2,6), date, type: 'invoice-payment', amount: inv.total, account: 'bank', description: `Payment for ${inv.number}`, user: (JSON.parse(localStorage.getItem('currentUser'))||{}).username || 'System' };
+                        txs.unshift(tx); added++; addActivityLog('migration-add-transaction', { source: 'invoices', invoice: inv.number, amount: inv.total, id: tx.id });
+                    }
+                }
+            });
+        }
+
+        if(added > 0){
+            saveStoredTransactions(txs);
+            this.updateStats();
+            // if on reports/dashboard, refresh views where necessary
+            try{ if(window.reportsManager) window.reportsManager.renderReportsTable(); }catch(e){}
+            try{ if(window.recordKeeper) { /* re-render sales track if visible */ } }catch(e){}
+            addActivityLog('migration-complete', { added });
+            console.log('Migration added', added, 'transactions');
+        }
+    }catch(e){ console.warn('Migration failed', e); }
+};

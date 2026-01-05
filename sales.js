@@ -71,6 +71,26 @@ class SalesManager {
         // Refresh displays
         this.renderSalesTable();
         this.renderInventory();
+
+        // Persist a corresponding transaction to Accounts (localStorage) and record activity
+        try {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            const txs = JSON.parse(localStorage.getItem('transactions') || '[]');
+            txs.unshift({
+                id: Date.now().toString(),
+                date: formData.saleDate,
+                type: 'sale',
+                amount: formData.total,
+                account: 'cash',
+                description: `Sale: ${formData.itemName}`,
+                user: currentUser ? currentUser.username : 'System'
+            });
+            localStorage.setItem('transactions', JSON.stringify(txs));
+
+            const acts = JSON.parse(localStorage.getItem('activityLog') || '[]');
+            acts.unshift({ id: Date.now().toString(), action: 'add-transaction', data: { source: 'sales', amount: formData.total }, user: currentUser ? currentUser.username : 'System', timestamp: new Date().toISOString() });
+            localStorage.setItem('activityLog', JSON.stringify(acts));
+        } catch (e) { console.warn('Could not write transaction/activity', e); }
         
         // Clear form
         this.clearForm();

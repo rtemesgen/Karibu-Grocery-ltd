@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users - KARIBU GROCERIES .LTD</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="profile-section">
+                <div class="profile-avatar"></div>
+                <div class="profile-info">
+                    <h3 id="profileRole">Guest</h3>
+                    <p id="profileName">Not logged in</p>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="nav-menu">
+                    <li class="nav-item"><a href="accounts.html" class="nav-link"><span class="nav-icon"></span><span>Accounts</span></a></li>
+                    <li class="nav-item"><a href="sales.html" class="nav-link"><span class="nav-icon"></span><span>Sales track</span></a></li>
+                    <li class="nav-item"><a href="stock.html" class="nav-link"><span class="nav-icon"></span><span>Stock</span></a></li>
+                    <li class="nav-item"><a href="invoices.html" class="nav-link"><span class="nav-icon"></span><span>Invoices</span></a></li>
+                    <li class="nav-item"><a href="reports.html" class="nav-link"><span class="nav-icon"></span><span>Report</span></a></li>
+                    <li class="nav-item active"><a href="users.html" class="nav-link"><span class="nav-icon"></span><span>Users</span></a></li>
+                    <li class="nav-item"><a href="support.html" class="nav-link"><span class="nav-icon"></span><span>Support</span></a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div class="section-header">
+                <h1>Users</h1>
+                <p>Manage user accounts, roles, and access</p>
+                <div class="header-actions">
+                    <input class="main-search" id="usersSearch" placeholder="Search users...">
+                    <button id="addUserBtn" class="btn-primary">Add User</button>
+                    <button class="btn-secondary" onclick="handleGlobalLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+
+            <div class="sales-table-container">
+                <table class="sales-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="userModalTitle">Add User</h2>
+                <button id="closeUserModal" class="btn-close"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="userForm" class="record-form">
+                <div class="form-group">
+                    <label for="userUsername">Username</label>
+                    <input id="userUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="userPassword">Password</label>
+                    <input id="userPassword" type="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="userRole">Role</label>
+                    <select id="userRole" required>
+                        <option value="admin">Admin</option>
+                        <option value="manager">Manager</option>
+                        <option value="cashier">Cashier</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancelUser" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="users.js"></script>
+    <script src="profile.js"></script>
+</body>
+</html>

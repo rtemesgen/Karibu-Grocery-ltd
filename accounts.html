@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounts - KARIBU GROCERIES .LTD</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Profile Section -->
+            <div class="profile-section">
+                <div class="profile-avatar"></div>
+                <div class="profile-info">
+                    <h3 id="profileRole">Guest</h3>
+                    <p id="profileName">Not logged in</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <nav class="sidebar-nav">
+                <ul class="nav-menu">
+                    <li class="nav-item active">
+                        <a href="accounts.html" class="nav-link">
+                            <span class="nav-icon"></span>
+                            <span>Accounts</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="sales.html" class="nav-link">
+                            <span class="nav-icon"></span>
+                            <span>Sales track</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="stock.html" class="nav-link">
+                            <span class="nav-icon"></span>
+                            <span>Stock</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="invoices.html" class="nav-link">
+                            <span class="nav-icon"></span>
+                            <span>Invoices</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="reports.html" class="nav-link">
+                            <span class="nav-icon"></span>
+                            <span>Report</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="support.html" class="nav-link">
+                            <span class="nav-icon"></span>
+                            <span>Support</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Logout / Login Button (toggle) -->
+            <button id="loginBtn" class="sidebar-login">
+                <i class="fas fa-sign-in-alt"></i>
+            </button>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="section-header">
+                <h1>Accounts</h1>
+                <p>Balance sheet, transaction history, and reports</p>
+                <div class="header-actions" style="margin-top:0.5rem;">
+                    <input class="main-search" id="accountsSearch" placeholder="Search...">
+                    <button class="btn-secondary" onclick="handleGlobalLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+
+            <div class="dashboard-cards">
+                <div class="dashboard-card"></div>
+                <div class="dashboard-card"></div>
+            </div>
+
+            <div class="accounts-grid" style="margin-top:1.5rem;">
+                <div class="account-card">
+                    <h3>Total Income</h3>
+                    <p id="totalIncome" class="account-number">$0</p>
+                </div>
+                <div class="account-card">
+                    <h3>Total Expenses</h3>
+                    <p id="totalExpenses" class="account-number">$0</p>
+                </div>
+                <div class="account-card">
+                    <h3>Net Profit</h3>
+                    <p id="netProfit" class="account-number">$0</p>
+                </div>
+                <div class="account-card">
+                    <h3>Cash / Bank</h3>
+                    <p id="cashBalance" class="account-number">$0</p>
+                </div>
+            </div>
+
+            <div class="account-actions" style="margin-bottom:1rem;">
+                <button id="addTransactionBtn" class="action-btn">Add Transaction</button>
+                <button id="exportCsvBtn" class="action-btn">Export CSV</button>
+                <button id="viewActivityBtn" class="action-btn">Activity Log</button>
+            </div>
+
+
+
+            <div class="sales-section">
+                <h2 style="margin-bottom:1rem; color:white">Transaction History</h2>
+                <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1rem;">
+                    <input id="searchTransaction" type="text" placeholder="Search description..." style="flex:1; padding:0.75rem; border-radius:8px; border:none;">
+                    <select id="filterType" style="padding:0.6rem; border-radius:8px; border:none;">
+                        <option value="">All</option>
+                        <option value="sale">Sale</option>
+                        <option value="expense">Expense</option>
+                        <option value="procurement">Procurement</option>
+                    </select>
+                    <input id="filterFrom" type="date" style="padding:0.5rem; border-radius:8px; border:none;">
+                    <input id="filterTo" type="date" style="padding:0.5rem; border-radius:8px; border:none;">
+                </div>
+                <div class="sales-table-container">
+                    <table class="sales-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Account</th>
+                                <th>Description</th>
+                                <th>User</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody">
+                            <!-- Transactions will be rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div id="transactionModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="transactionModalTitle">Add Transaction</h2>
+                <button id="closeTransactionModal" class="btn-close"><i class="fas fa-times"></i></button>
+            </div>
+
+            <form id="transactionForm" class="record-form">
+                <div class="form-group">
+                    <label for="transactionType">Type</label>
+                    <select id="transactionType" required>
+                        <option value="sale">Sale</option>
+                        <option value="expense">Expense</option>
+                        <option value="procurement">Procurement</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="transactionAmount">Amount ($)</label>
+                    <input type="number" id="transactionAmount" placeholder="Enter amount" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="transactionAccount">Account</label>
+                    <select id="transactionAccount">
+                        <option value="cash">Cash</option>
+                        <option value="bank">Bank</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="transactionDescription">Description</label>
+                    <textarea id="transactionDescription" placeholder="Enter description"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="transactionDate">Date</label>
+                    <input type="date" id="transactionDate" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="cancelTransaction" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal (lightweight) -->
+    <div id="loginModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Login</h2>
+                <button id="closeLoginModal" class="btn-close"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="loginFormLocal" class="record-form">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input id="loginPassword" type="password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancelLogin" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Activity Modal -->
+    <div id="activityModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Activity Log</h2>
+                <button id="closeActivityModal" class="btn-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="padding:1rem;">
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+                    <input id="activitySearch" type="text" placeholder="Search action or data..." style="flex:1; padding:0.5rem; border-radius:6px; border:1px solid #e5e7eb;">
+                    <input id="activityFrom" type="date" style="padding:0.4rem; border-radius:6px; border:1px solid #e5e7eb;">
+                    <input id="activityTo" type="date" style="padding:0.4rem; border-radius:6px; border:1px solid #e5e7eb;">
+                    <button id="exportActivityBtn" class="action-btn">Export CSV</button>
+                    <button id="clearActivityBtn" class="action-btn" style="background:#ef4444;">Clear</button>
+                </div>
+
+                <div id="activityList" style="max-height:360px; overflow:auto; border:1px solid #e6e6e6; border-radius:6px; padding:0.5rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="accounts.js"></script>
+</body>
+</html>

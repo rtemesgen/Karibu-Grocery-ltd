@@ -206,6 +206,27 @@ class InvoiceManager {
         if (invoice) {
             invoice.status = 'paid';
             invoice.paidDate = new Date().toISOString();
+
+            // Persist a corresponding transaction to Accounts and record activity
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+                const txs = JSON.parse(localStorage.getItem('transactions') || '[]');
+                txs.unshift({
+                    id: Date.now().toString(),
+                    date: invoice.paidDate,
+                    type: 'invoice-payment',
+                    amount: invoice.total,
+                    account: 'bank',
+                    description: `Payment for ${invoice.number}`,
+                    user: currentUser ? currentUser.username : 'System'
+                });
+                localStorage.setItem('transactions', JSON.stringify(txs));
+
+                const acts = JSON.parse(localStorage.getItem('activityLog') || '[]');
+                acts.unshift({ id: Date.now().toString(), action: 'invoice-paid', data: { invoiceId: invoice.id, amount: invoice.total }, user: currentUser ? currentUser.username : 'System', timestamp: new Date().toISOString() });
+                localStorage.setItem('activityLog', JSON.stringify(acts));
+            } catch (e) { console.warn('Could not write transaction/activity', e); }
+
             this.renderInvoicesTable();
             this.showNotification('Invoice marked as paid', 'success');
         }

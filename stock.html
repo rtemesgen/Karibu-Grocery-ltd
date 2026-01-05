@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Management - Smart Record Keeper</title>
+    <title>Stock Management - KARIBU GROCERIES .LTD</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -14,25 +14,23 @@
             <div class="profile-section">
                 <div class="profile-avatar"></div>
                 <div class="profile-info">
-                    <h3>Manager</h3>
-                    <p>Imani Frank</p>
+                    <h3 id="profileRole">Guest</h3>
+                    <p id="profileName">Not logged in</p>
                 </div>
             </div>
             <nav class="sidebar-nav">
                 <ul class="nav-menu">
-                    <li class="nav-item"><a href="index-simple.html" class="nav-link"><span class="nav-icon"></span><span>Accounts</span></a></li>
+                    <li class="nav-item"><a href="accounts.html" class="nav-link"><span class="nav-icon"></span><span>Accounts</span></a></li>
                     <li class="nav-item"><a href="sales.html" class="nav-link"><span class="nav-icon"></span><span>Sales track</span></a></li>
                     <li class="nav-item active"><a href="stock.html" class="nav-link"><span class="nav-icon"></span><span>Stock</span></a></li>
                     <li class="nav-item"><a href="invoices.html" class="nav-link"><span class="nav-icon"></span><span>Invoices</span></a></li>
+                    <li class="nav-item"><a href="users.html" class="nav-link"><span class="nav-icon"></span><span>Users</span></a></li>
                     <li class="nav-item"><a href="tasks.html" class="nav-link"><span class="nav-icon"></span><span>Task schedule</span></a></li>
                     <li class="nav-item"><a href="communication.html" class="nav-link"><span class="nav-icon"></span><span>communication</span></a></li>
                     <li class="nav-item"><a href="reports.html" class="nav-link"><span class="nav-icon"></span><span>Report</span></a></li>
                     <li class="nav-item"><a href="support.html" class="nav-link"><span class="nav-icon"></span><span>Support</span></a></li>
                 </ul>
             </nav>
-            <button id="logoutBtn" class="sidebar-logout" onclick="window.location.href='index-simple.html'">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
         </div>
         
         <div class="main-content">
@@ -40,8 +38,7 @@
                 <h1>Stock Management</h1>
                 <div class="header-actions">
                     <button id="addItemBtn" class="btn-primary"><i class="fas fa-plus"></i> Add Item</button>
-                    <button id="importStockBtn" class="btn-secondary"><i class="fas fa-upload"></i> Import</button>
-                </div>
+                    <button id="importStockBtn" class="btn-secondary"><i class="fas fa-upload"></i> Import</button>                    <button class="btn-secondary" onclick="handleGlobalLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</button>                </div>
             </div>
 
             <!-- Stock Overview -->
@@ -176,5 +173,6 @@
         </div>
     </div>
     <script src="stock.js"></script>
+    <script src="profile.js"></script>
 </body>
 </html>
