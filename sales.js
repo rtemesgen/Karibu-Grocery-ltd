@@ -1,151 +1,261 @@
 // Sales Management JavaScript
 class SalesManager {
-    constructor() {
-        this.inventory = this.getInitialInventory();
-        this.sales = this.getInitialSales();
-        this.init();
+  constructor() {
+    this.ALLOWED_PRODUCTS = ['Beans', 'Grain Maize', 'Cow peas', 'G-nuts', 'Soybeans'];
+    this.inventory = this.loadInventory();
+    this.sales = this.getInitialSales();
+    this.init();
+  }
+
+  loadInventory() {
+    try {
+      const stored = localStorage.getItem('stockItems');
+      if (stored) {
+        const items = JSON.parse(stored);
+        // Map stockItems to inventory format with selling price
+        return items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          category: item.category || 'grains',
+          quantity: item.quantity || 0,
+          price: item.sellingPrice || 0,
+          costPrice: item.costPrice || 0,
+          minStock: item.minStock || 1000,
+        }));
+      }
+    } catch (e) {
+      console.warn('Failed to load stockItems for sales', e);
     }
+    return this.getInitialInventory();
+  }
 
-    init() {
-        this.setupEventListeners();
-        this.renderInventory();
-        this.renderSalesTable();
-        this.setDefaultDate();
-        this.calculateTotal();
+  persistInventory() {
+    try {
+      // Map back to stockItems format with costPrice, minStock, etc.
+      const stockItems = this.inventory.map((item) => ({
+        id: item.id,
+        name: item.name,
+        sku: item.sku || '',
+        category: item.category || 'grains',
+        quantity: item.quantity,
+        minStock: item.minStock || 1000,
+        costPrice: item.costPrice || 0,
+        sellingPrice: item.price,
+        batches: item.batches || [],
+      }));
+      localStorage.setItem('stockItems', JSON.stringify(stockItems));
+    } catch (e) {
+      console.warn('Failed to persist stockItems from sales', e);
     }
+  }
 
-    setupEventListeners() {
-        // Form calculations
-        document.getElementById('quantity').addEventListener('input', () => this.calculateTotal());
-        document.getElementById('unitPrice').addEventListener('input', () => this.calculateTotal());
-
-        // Form submission
-        document.getElementById('salesForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleSaleSubmission();
-        });
-
-        // Cancel button
-        document.getElementById('cancelBtn').addEventListener('click', () => {
-            this.clearForm();
-        });
-
-        // Export button
-        document.getElementById('exportSalesBtn').addEventListener('click', () => {
-            this.exportSales();
-        });
+  init() {
+    this.setupEventListeners();
+    // Load persisted sales or backfill from transactions so the table isn't empty on refresh
+    if (!this.sales || this.sales.length === 0) {
+      this.backfillSalesFromTransactions();
     }
+    this.renderInventory();
+    this.renderSalesTable();
+    this.setDefaultDate();
+    this.calculateTotal();
+    this.updateDashboardMetrics();
 
-    calculateTotal() {
-        const quantity = parseFloat(document.getElementById('quantity').value) || 0;
-        const unitPrice = parseFloat(document.getElementById('unitPrice').value) || 0;
-        const total = quantity * unitPrice;
-        
-        document.getElementById('totalAmount').textContent = `$${total.toFixed(2)}`;
-    }
-
-    setDefaultDate() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('saleDate').value = today;
-    }
-
-    handleSaleSubmission() {
-        const formData = {
-            id: Date.now().toString(),
-            itemName: document.getElementById('itemName').value,
-            category: document.getElementById('itemCategory').value,
-            quantity: parseInt(document.getElementById('quantity').value),
-            unitPrice: parseFloat(document.getElementById('unitPrice').value),
-            customerName: document.getElementById('customerName').value,
-            saleDate: document.getElementById('saleDate').value,
-            description: document.getElementById('description').value,
-            total: parseFloat(document.getElementById('quantity').value) * parseFloat(document.getElementById('unitPrice').value)
-        };
-
-        // Add to sales list
-        this.sales.unshift(formData);
-        
-        // Update inventory (decrease quantity)
-        this.updateInventory(formData.itemName, formData.quantity);
-        
-        // Refresh displays
-        this.renderSalesTable();
-        this.renderInventory();
-
-        // Persist a corresponding transaction to Accounts (localStorage) and record activity
-        try {
-            const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-            const txs = JSON.parse(localStorage.getItem('transactions') || '[]');
-            txs.unshift({
-                id: Date.now().toString(),
-                date: formData.saleDate,
-                type: 'sale',
-                amount: formData.total,
-                account: 'cash',
-                description: `Sale: ${formData.itemName}`,
-                user: currentUser ? currentUser.username : 'System'
-            });
-            localStorage.setItem('transactions', JSON.stringify(txs));
-
-            const acts = JSON.parse(localStorage.getItem('activityLog') || '[]');
-            acts.unshift({ id: Date.now().toString(), action: 'add-transaction', data: { source: 'sales', amount: formData.total }, user: currentUser ? currentUser.username : 'System', timestamp: new Date().toISOString() });
-            localStorage.setItem('activityLog', JSON.stringify(acts));
-        } catch (e) { console.warn('Could not write transaction/activity', e); }
-        
-        // Clear form
-        this.clearForm();
-        
-        // Show success message
-        this.showNotification('Sale recorded successfully!', 'success');
-    }
-
-    updateInventory(itemName, soldQuantity) {
-        const item = this.inventory.find(item => item.name.toLowerCase() === itemName.toLowerCase());
-        if (item) {
-            item.quantity = Math.max(0, item.quantity - soldQuantity);
+    // Refresh metrics when transactions or sales change in localStorage
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'transactions' || e.key === 'sales') {
+        // Re-read persisted sales if they changed elsewhere
+        if (e.key === 'sales') {
+          try {
+            this.sales = JSON.parse(localStorage.getItem('sales') || '[]');
+          } catch (err) {
+            console.warn('Failed to reload sales from storage', err);
+          }
         }
+        this.updateDashboardMetrics();
+      }
+    });
+  }
+
+  setupEventListeners() {
+    // Form calculations
+    document.getElementById('quantity').addEventListener('input', () => this.calculateTotal());
+    document.getElementById('unitPrice').addEventListener('input', () => this.calculateTotal());
+
+    // Form submission
+    document.getElementById('salesForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.handleSaleSubmission();
+    });
+
+    // Cancel button
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      this.clearForm();
+    });
+
+    // Export button
+    document.getElementById('exportSalesBtn').addEventListener('click', () => {
+      this.exportSales();
+    });
+  }
+
+  calculateTotal() {
+    const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+    const unitPrice = parseFloat(document.getElementById('unitPrice').value) || 0;
+    const total = quantity * unitPrice;
+
+    document.getElementById('totalAmount').textContent = `$${total.toFixed(2)}`;
+  }
+
+  setDefaultDate() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('saleDate').value = today;
+  }
+
+  handleSaleSubmission() {
+    const itemName = document.getElementById('itemName').value.trim();
+    const quantity = parseInt(document.getElementById('quantity').value, 10);
+    const unitPrice = parseFloat(document.getElementById('unitPrice').value);
+    const customerName = document.getElementById('customerName').value.trim();
+    const saleDate = document.getElementById('saleDate').value;
+
+    if (!itemName || !quantity || !unitPrice || !customerName || !saleDate) {
+      alert('Please fill all required fields');
+      return;
     }
 
-    clearForm() {
-        document.getElementById('salesForm').reset();
-        this.setDefaultDate();
-        document.getElementById('totalAmount').textContent = '$0.00';
+    if (!this.ALLOWED_PRODUCTS.includes(itemName)) {
+      alert('Only approved products can be sold');
+      return;
     }
 
-    renderInventory() {
-        const inventoryGrid = document.getElementById('inventoryGrid');
-        
-        inventoryGrid.innerHTML = this.inventory.map(item => {
-            const stockStatus = item.quantity < 10 ? 'low-stock' : 'in-stock';
-            return `
+    const formData = {
+      id: Date.now().toString(),
+      itemName,
+      category: 'grains',
+      quantity,
+      unitPrice,
+      customerName,
+      saleDate,
+      description: document.getElementById('description').value,
+      total: quantity * unitPrice,
+    };
+
+    // Add to sales list and persist
+    this.sales.unshift(formData);
+    this.persistSales();
+
+    // Update inventory (decrease quantity)
+    this.updateInventory(formData.itemName, formData.quantity);
+
+    // Refresh displays
+    this.renderSalesTable();
+    this.renderInventory();
+
+    // Persist a corresponding transaction to Accounts (localStorage) and record activity
+    try {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+      const txs = JSON.parse(localStorage.getItem('transactions') || '[]');
+      txs.unshift({
+        id: Date.now().toString(),
+        date: formData.saleDate,
+        type: 'sale',
+        amount: formData.total,
+        account: 'cash',
+        description: `Sale: ${formData.itemName}`,
+        user: currentUser ? currentUser.username : 'System',
+      });
+      localStorage.setItem('transactions', JSON.stringify(txs));
+
+      const acts = JSON.parse(localStorage.getItem('activityLog') || '[]');
+      acts.unshift({
+        id: Date.now().toString(),
+        action: 'add-transaction',
+        data: { source: 'sales', amount: formData.total },
+        user: currentUser ? currentUser.username : 'System',
+        timestamp: new Date().toISOString(),
+      });
+      localStorage.setItem('activityLog', JSON.stringify(acts));
+    } catch (e) {
+      console.warn('Could not write transaction/activity', e);
+    }
+
+    // Clear form
+    this.clearForm();
+
+    // Update dashboard metrics
+    this.updateDashboardMetrics();
+
+    // Show success message
+    this.showNotification('Sale recorded successfully!', 'success');
+  }
+
+  updateInventory(itemName, soldQuantity) {
+    const item = this.inventory.find((item) => item.name.toLowerCase() === itemName.toLowerCase());
+    if (item) {
+      item.quantity = Math.max(0, item.quantity - soldQuantity);
+      this.persistInventory();
+    }
+  }
+
+  clearForm() {
+    document.getElementById('salesForm').reset();
+    this.setDefaultDate();
+    document.getElementById('totalAmount').textContent = '$0.00';
+  }
+
+  renderInventory() {
+    const inventoryGrid = document.getElementById('inventoryGrid');
+
+    inventoryGrid.innerHTML = this.inventory
+      .map((item) => {
+        const minStock = item.minStock || 1000;
+        const isLow = item.quantity <= minStock;
+        const isOut = item.quantity === 0;
+        const stockStatus = isOut ? 'out-of-stock' : isLow ? 'low-stock' : 'in-stock';
+        const statusText = isOut ? 'Out of Stock' : isLow ? 'Low Stock' : 'In Stock';
+        const statusIcon = isOut
+          ? '<i class="fas fa-exclamation-circle"></i>'
+          : isLow
+            ? '<i class="fas fa-exclamation-triangle"></i>'
+            : '<i class="fas fa-check-circle"></i>';
+        return `
                 <div class="inventory-item ${stockStatus}">
                     <div class="item-header">
                         <h4>${item.name}</h4>
                         <span class="category-badge">${item.category}</span>
                     </div>
                     <div class="item-details">
-                        <p class="quantity">Qty: ${item.quantity}</p>
-                        <p class="price">$${item.price.toFixed(2)}</p>
+                        <p class="quantity">Qty: ${item.quantity} kg</p>
+                        <p class="price">UGX ${(item.price || 0).toLocaleString()}</p>
                     </div>
                     <div class="stock-status">
-                        ${item.quantity < 10 ? '<i class="fas fa-exclamation-triangle"></i> Low Stock' : '<i class="fas fa-check-circle"></i> In Stock'}
+                        ${statusIcon} ${statusText}
                     </div>
                 </div>
             `;
-        }).join('');
+      })
+      .join('');
+  }
+
+  renderSalesTable() {
+    const tableBody = document.getElementById('salesTableBody');
+
+    if (!this.sales || this.sales.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">No recent sales</td></tr>';
+      return;
     }
 
-    renderSalesTable() {
-        const tableBody = document.getElementById('salesTableBody');
-        
-        tableBody.innerHTML = this.sales.map(sale => `
+    tableBody.innerHTML = this.sales
+      .map(
+        (sale) => `
             <tr>
                 <td>${this.formatDate(sale.saleDate)}</td>
                 <td>${sale.itemName}</td>
                 <td>${sale.customerName}</td>
-                <td>${sale.quantity}</td>
-                <td>$${sale.unitPrice.toFixed(2)}</td>
-                <td>$${sale.total.toFixed(2)}</td>
+                <td>${sale.quantity} kg</td>
+                <td>UGX ${(sale.unitPrice || 0).toLocaleString()}</td>
+                <td>UGX ${(sale.total || 0).toLocaleString()}</td>
                 <td>
                     <button class="btn-edit" onclick="salesManager.editSale('${sale.id}')">
                         <i class="fas fa-edit"></i>
@@ -155,140 +265,222 @@ class SalesManager {
                     </button>
                 </td>
             </tr>
-        `).join('');
+        `,
+      )
+      .join('');
+  }
+
+  editSale(saleId) {
+    const sale = this.sales.find((s) => s.id === saleId);
+    if (sale) {
+      // Populate form with sale data
+      document.getElementById('itemName').value = sale.itemName;
+      document.getElementById('itemCategory').value = sale.category;
+      document.getElementById('quantity').value = sale.quantity;
+      document.getElementById('unitPrice').value = sale.unitPrice;
+      document.getElementById('customerName').value = sale.customerName;
+      document.getElementById('saleDate').value = sale.saleDate;
+      document.getElementById('description').value = sale.description || '';
+
+      // Remove from sales list (will be re-added when saved)
+      this.sales = this.sales.filter((s) => s.id !== saleId);
+      this.renderSalesTable();
+
+      this.calculateTotal();
+      this.showNotification('Sale loaded for editing', 'info');
     }
+  }
 
-    editSale(saleId) {
-        const sale = this.sales.find(s => s.id === saleId);
-        if (sale) {
-            // Populate form with sale data
-            document.getElementById('itemName').value = sale.itemName;
-            document.getElementById('itemCategory').value = sale.category;
-            document.getElementById('quantity').value = sale.quantity;
-            document.getElementById('unitPrice').value = sale.unitPrice;
-            document.getElementById('customerName').value = sale.customerName;
-            document.getElementById('saleDate').value = sale.saleDate;
-            document.getElementById('description').value = sale.description || '';
-            
-            // Remove from sales list (will be re-added when saved)
-            this.sales = this.sales.filter(s => s.id !== saleId);
-            this.renderSalesTable();
-            
-            this.calculateTotal();
-            this.showNotification('Sale loaded for editing', 'info');
-        }
+  deleteSale(saleId) {
+    if (confirm('Are you sure you want to delete this sale?')) {
+      this.sales = this.sales.filter((s) => s.id !== saleId);
+      this.persistSales();
+      this.renderSalesTable();
+      this.showNotification('Sale deleted successfully', 'success');
     }
+  }
 
-    deleteSale(saleId) {
-        if (confirm('Are you sure you want to delete this sale?')) {
-            this.sales = this.sales.filter(s => s.id !== saleId);
-            this.renderSalesTable();
-            this.showNotification('Sale deleted successfully', 'success');
-        }
-    }
+  exportSales() {
+    const csvContent = 'data:text/csv;charset=utf-8,'
+      + `Date,Item,Customer,Quantity,Unit Price,Total\n${
+        this.sales
+          .map(
+            (sale) => `${sale.saleDate},${sale.itemName},${sale.customerName},${sale.quantity},${sale.unitPrice},${sale.total}`,
+          )
+          .join('\n')}`;
 
-    exportSales() {
-        const csvContent = "data:text/csv;charset=utf-8," 
-            + "Date,Item,Customer,Quantity,Unit Price,Total\n"
-            + this.sales.map(sale => 
-                `${sale.saleDate},${sale.itemName},${sale.customerName},${sale.quantity},${sale.unitPrice},${sale.total}`
-            ).join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'sales_export.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "sales_export.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        this.showNotification('Sales exported successfully', 'success');
-    }
+    this.showNotification('Sales exported successfully', 'success');
+  }
 
-    showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
+  showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
             <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}"></i>
             ${message}
         `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 100);
-        
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 300);
-        }, 3000);
-    }
 
-    formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.classList.add('show');
+    }, 100);
+
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 300);
+    }, 3000);
+  }
+
+  formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+
+  getInitialInventory() {
+    return [
+      {
+        id: 1, name: 'Beans', category: 'grains', quantity: 5000, price: 3500,
+      },
+      {
+        id: 2, name: 'Grain Maize', category: 'grains', quantity: 8000, price: 3000,
+      },
+      {
+        id: 3, name: 'Cow peas', category: 'grains', quantity: 3500, price: 4200,
+      },
+      {
+        id: 4, name: 'G-nuts', category: 'grains', quantity: 2000, price: 6000,
+      },
+      {
+        id: 5, name: 'Soybeans', category: 'grains', quantity: 4500, price: 5000,
+      },
+    ];
+  }
+
+  getInitialSales() {
+    try {
+      return JSON.parse(localStorage.getItem('sales') || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  // Update dashboard metrics with real data
+  updateDashboardMetrics() {
+    try {
+      const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+      const today = new Date();
+      const todayStr = today.toISOString().slice(0, 10);
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+        .toISOString()
+        .slice(0, 10);
+
+      // Calculate today's sales
+      const todaySales = transactions
+        .filter((t) => t.type === 'sale' && t.date === todayStr)
+        .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+      // Calculate monthly revenue
+      const monthRevenue = transactions
+        .filter((t) => t.type === 'sale' && t.date >= startOfMonth && t.date <= todayStr)
+        .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+      // Calculate items sold (from sales manager data)
+      const totalItemsSold = this.sales.reduce((sum, sale) => sum + sale.quantity, 0);
+
+      // Calculate total expenses
+      const monthExpenses = transactions
+        .filter(
+          (t) => (t.type === 'expense' || t.type === 'procurement')
+            && t.date >= startOfMonth
+            && t.date <= todayStr,
+        )
+        .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+      // Calculate profit margin
+      const profitMargin = monthRevenue > 0 ? ((monthRevenue - monthExpenses) / monthRevenue) * 100 : 0;
+
+      // Update DOM elements by IDs (fallback to card order if IDs missing)
+      const setText = (selector, text) => {
+        const el = document.querySelector(selector);
+        if (el) el.textContent = text;
+      };
+
+      setText('#todaySalesValue', `UGX ${todaySales.toLocaleString()}`);
+      setText('#monthRevenueValue', `UGX ${monthRevenue.toLocaleString()}`);
+      setText('#itemsSoldValue', totalItemsSold.toLocaleString());
+      setText('#profitMarginValue', `${profitMargin.toFixed(1)}%`);
+
+      // Fallback for older markup
+      const cards = document.querySelectorAll('.overview-card');
+      if (cards.length >= 4) {
+        if (!document.querySelector('#todaySalesValue')) cards[0].querySelector('.card-value').textContent = `UGX ${todaySales.toLocaleString()}`;
+        if (!document.querySelector('#monthRevenueValue')) cards[1].querySelector('.card-value').textContent = `UGX ${monthRevenue.toLocaleString()}`;
+        if (!document.querySelector('#itemsSoldValue')) cards[2].querySelector('.card-value').textContent = totalItemsSold.toLocaleString();
+        if (!document.querySelector('#profitMarginValue')) cards[3].querySelector('.card-value').textContent = `${profitMargin.toFixed(1)}%`;
+      }
+    } catch (e) {
+      console.warn('Could not update dashboard metrics', e);
+    }
+  }
+
+  // Persist current sales list
+  persistSales() {
+    try {
+      localStorage.setItem('sales', JSON.stringify(this.sales || []));
+    } catch (e) {
+      console.warn('Could not persist sales', e);
+    }
+  }
+
+  // If there are no saved sales, try to build a recent list from transactions
+  backfillSalesFromTransactions() {
+    try {
+      const txs = JSON.parse(localStorage.getItem('transactions') || '[]');
+      const recent = txs
+        .filter((t) => t.type === 'sale')
+        .slice(0, 20) // limit to recent 20
+        .map((t) => {
+          // Try to extract item name from description "Sale: <name>"
+          let itemName = 'Sale';
+          const m = (t.description || '').match(/Sale:\s*(.*)/i);
+          if (m && m[1]) itemName = m[1];
+          return {
+            id: t.id || Date.now().toString(),
+            itemName,
+            category: '',
+            quantity: 1,
+            unitPrice: parseFloat(t.amount) || 0,
+            customerName: t.user || '-',
+            saleDate: t.date,
+            description: t.description || '',
+            total: parseFloat(t.amount) || 0,
+          };
         });
+      if (recent.length > 0) {
+        this.sales = recent;
+      }
+    } catch {
+      // ignore
     }
-
-    getInitialInventory() {
-        return [
-            { id: 1, name: 'Laptop Pro', category: 'electronics', quantity: 25, price: 1299.99 },
-            { id: 2, name: 'Wireless Headphones', category: 'electronics', quantity: 50, price: 199.99 },
-            { id: 3, name: 'Smart Watch', category: 'electronics', quantity: 8, price: 299.99 },
-            { id: 4, name: 'Gaming Chair', category: 'home', quantity: 15, price: 399.99 },
-            { id: 5, name: 'Desk Lamp', category: 'home', quantity: 30, price: 79.99 },
-            { id: 6, name: 'Coffee Maker', category: 'home', quantity: 5, price: 149.99 },
-            { id: 7, name: 'Running Shoes', category: 'sports', quantity: 20, price: 129.99 },
-            { id: 8, name: 'Yoga Mat', category: 'sports', quantity: 12, price: 49.99 }
-        ];
-    }
-
-    getInitialSales() {
-        return [
-            {
-                id: '1',
-                itemName: 'Laptop Pro',
-                category: 'electronics',
-                quantity: 2,
-                unitPrice: 1299.99,
-                customerName: 'John Smith',
-                saleDate: '2025-12-12',
-                description: 'Corporate bulk order',
-                total: 2599.98
-            },
-            {
-                id: '2',
-                itemName: 'Wireless Headphones',
-                category: 'electronics',
-                quantity: 3,
-                unitPrice: 199.99,
-                customerName: 'Sarah Johnson',
-                saleDate: '2025-12-11',
-                description: '',
-                total: 599.97
-            },
-            {
-                id: '3',
-                itemName: 'Gaming Chair',
-                category: 'home',
-                quantity: 1,
-                unitPrice: 399.99,
-                customerName: 'Mike Davis',
-                saleDate: '2025-12-10',
-                description: 'Home office setup',
-                total: 399.99
-            }
-        ];
-    }
+  }
 }
 
 // Initialize the sales manager when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    window.salesManager = new SalesManager();
+  window.salesManager = new SalesManager();
 });

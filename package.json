@@ -1,0 +1,36 @@
+{
+  "name": "kgl_project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "accounts.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rtemesgen/Karibu-Grocery-ltd.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/rtemesgen/Karibu-Grocery-ltd/issues"
+  },
+  "homepage": "https://github.com/rtemesgen/Karibu-Grocery-ltd#readme",
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^17.0.0",
+    "husk": "^0.5.3",
+    "husky": "^9.0.0",
+    "prettier": "^3.7.4"
+  }
+}
