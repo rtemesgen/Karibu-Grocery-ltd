@@ -2,7 +2,7 @@
 // KARIBU GROCERIES .LTD - JavaScript Application
 class RecordKeeper {
   constructor() {
-    this.currentView = "login";
+    this.currentView = 'login';
     this.isLoggedIn = false;
     this.records = this.getInitialRecords();
     this.currentEditId = null;
@@ -16,7 +16,7 @@ class RecordKeeper {
     this.seedDefaultUsersIfNeeded();
 
     this.setupEventListeners();
-    this.showPage("loginPage");
+    this.showPage('loginPage');
     this.updateStats();
     this.initializeSalesData();
     this.setupTabNavigation();
@@ -31,108 +31,108 @@ class RecordKeeper {
     const byId = (id) => document.getElementById(id);
 
     // Login form
-    const loginForm = byId("loginForm");
+    const loginForm = byId('loginForm');
     if (loginForm) {
-      loginForm.addEventListener("submit", (e) => {
+      loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         this.handleLogin();
       });
     }
 
     // Logout buttons (only attach if present)
-    const lb = byId("logoutBtn");
+    const lb = byId('logoutBtn');
     if (lb) {
-      lb.addEventListener("click", () => {
+      lb.addEventListener('click', () => {
         this.handleLogout();
       });
     }
-    const lb2 = byId("logoutBtn2");
+    const lb2 = byId('logoutBtn2');
     if (lb2) {
-      lb2.addEventListener("click", () => {
+      lb2.addEventListener('click', () => {
         this.handleLogout();
       });
     }
 
     // Navigation buttons (guarded)
-    const addRecordBtn = byId("addRecordBtn");
+    const addRecordBtn = byId('addRecordBtn');
     if (addRecordBtn) {
-      addRecordBtn.addEventListener("click", () => {
+      addRecordBtn.addEventListener('click', () => {
         this.showAddRecordModal();
       });
     }
 
-    const viewRecordsBtn = byId("viewRecordsBtn");
+    const viewRecordsBtn = byId('viewRecordsBtn');
     if (viewRecordsBtn) {
-      viewRecordsBtn.addEventListener("click", () => {
+      viewRecordsBtn.addEventListener('click', () => {
         this.showRecordsPage();
       });
     }
 
-    const backToDashboard = byId("backToDashboard");
+    const backToDashboard = byId('backToDashboard');
     if (backToDashboard) {
-      backToDashboard.addEventListener("click", () => {
+      backToDashboard.addEventListener('click', () => {
         this.showDashboard();
       });
     }
 
-    const addRecordFromList = byId("addRecordFromList");
+    const addRecordFromList = byId('addRecordFromList');
     if (addRecordFromList) {
-      addRecordFromList.addEventListener("click", () => {
+      addRecordFromList.addEventListener('click', () => {
         this.showAddRecordModal();
       });
     }
 
     // Modal controls
-    const closeModal = byId("closeModal");
+    const closeModal = byId('closeModal');
     if (closeModal) {
-      closeModal.addEventListener("click", () => {
+      closeModal.addEventListener('click', () => {
         this.hideModal();
       });
     }
 
-    const cancelRecord = byId("cancelRecord");
+    const cancelRecord = byId('cancelRecord');
     if (cancelRecord) {
-      cancelRecord.addEventListener("click", () => {
+      cancelRecord.addEventListener('click', () => {
         this.hideModal();
       });
     }
 
     // Record form
-    const recordForm = byId("recordForm");
+    const recordForm = byId('recordForm');
     if (recordForm) {
-      recordForm.addEventListener("submit", (e) => {
+      recordForm.addEventListener('submit', (e) => {
         e.preventDefault();
         this.handleRecordSubmit();
       });
     }
 
     // Category change for amount field visibility
-    const recordCategory = byId("recordCategory");
+    const recordCategory = byId('recordCategory');
     if (recordCategory) {
-      recordCategory.addEventListener("change", (e) => {
+      recordCategory.addEventListener('change', (e) => {
         this.toggleAmountField(e.target.value);
       });
     }
 
     // Search and filter
-    const searchRecords = byId("searchRecords");
+    const searchRecords = byId('searchRecords');
     if (searchRecords) {
-      searchRecords.addEventListener("input", () => {
+      searchRecords.addEventListener('input', () => {
         this.filterRecords();
       });
     }
 
-    const categoryFilter = byId("categoryFilter");
+    const categoryFilter = byId('categoryFilter');
     if (categoryFilter) {
-      categoryFilter.addEventListener("change", () => {
+      categoryFilter.addEventListener('change', () => {
         this.filterRecords();
       });
     }
 
     // Click outside modal to close
-    const recordModal = byId("recordModal");
+    const recordModal = byId('recordModal');
     if (recordModal) {
-      recordModal.addEventListener("click", (e) => {
+      recordModal.addEventListener('click', (e) => {
         if (e.target === e.currentTarget) this.hideModal();
       });
     }
@@ -143,47 +143,47 @@ class RecordKeeper {
   getInitialRecords() {
     return [
       {
-        id: "1",
-        category: "sales",
-        title: "Product Sale - Widget A",
-        description: "Sold 10 units of Widget A to ABC Corp",
+        id: '1',
+        category: 'sales',
+        title: 'Product Sale - Widget A',
+        description: 'Sold 10 units of Widget A to ABC Corp',
         amount: 1500,
-        date: "2025-12-08",
-        createdAt: "2025-12-08T10:30:00Z",
+        date: '2025-12-08',
+        createdAt: '2025-12-08T10:30:00Z',
       },
       {
-        id: "2",
-        category: "expenses",
-        title: "Office Supplies",
-        description: "Purchased printer paper and ink cartridges",
+        id: '2',
+        category: 'expenses',
+        title: 'Office Supplies',
+        description: 'Purchased printer paper and ink cartridges',
         amount: 150,
-        date: "2025-12-07",
-        createdAt: "2025-12-07T14:20:00Z",
+        date: '2025-12-07',
+        createdAt: '2025-12-07T14:20:00Z',
       },
       {
-        id: "3",
-        category: "customer-info",
-        title: "New Customer - XYZ Ltd",
-        description: "Contact: John Smith, Email: john@xyz.com, Phone: (555) 123-4567",
-        date: "2025-12-06",
-        createdAt: "2025-12-06T09:15:00Z",
+        id: '3',
+        category: 'customer-info',
+        title: 'New Customer - XYZ Ltd',
+        description: 'Contact: John Smith, Email: john@xyz.com, Phone: (555) 123-4567',
+        date: '2025-12-06',
+        createdAt: '2025-12-06T09:15:00Z',
       },
       {
-        id: "4",
-        category: "personal-notes",
-        title: "Meeting Notes",
-        description: "Discussed Q1 strategy and marketing plans",
-        date: "2025-12-05",
-        createdAt: "2025-12-05T16:45:00Z",
+        id: '4',
+        category: 'personal-notes',
+        title: 'Meeting Notes',
+        description: 'Discussed Q1 strategy and marketing plans',
+        date: '2025-12-05',
+        createdAt: '2025-12-05T16:45:00Z',
       },
       {
-        id: "5",
-        category: "sales",
-        title: "Service Contract",
-        description: "Annual maintenance contract with DEF Company",
+        id: '5',
+        category: 'sales',
+        title: 'Service Contract',
+        description: 'Annual maintenance contract with DEF Company',
         amount: 3000,
-        date: "2025-12-04",
-        createdAt: "2025-12-04T11:00:00Z",
+        date: '2025-12-04',
+        createdAt: '2025-12-04T11:00:00Z',
       },
     ];
   }
@@ -192,22 +192,22 @@ class RecordKeeper {
 
   showPage(pageId) {
     // Hide all pages
-    document.querySelectorAll(".page").forEach((page) => {
-      page.classList.add("hidden");
+    document.querySelectorAll('.page').forEach((page) => {
+      page.classList.add('hidden');
     });
 
     // Show selected page
-    document.getElementById(pageId).classList.remove("hidden");
+    document.getElementById(pageId).classList.remove('hidden');
   }
 
   // Login functionality
   handleLogin() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const branch = document.getElementById("branch").value.trim();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const branch = document.getElementById('branch').value.trim();
 
     if (!username || !password || !branch) {
-      alert("Please enter username, password, and select a branch");
+      alert('Please enter username, password, and select a branch');
       return;
     }
 
@@ -217,16 +217,16 @@ class RecordKeeper {
     // Try to validate against stored users
     let users = [];
     try {
-      users = JSON.parse(localStorage.getItem("users")) || [];
+      users = JSON.parse(localStorage.getItem('users')) || [];
     } catch (error) {
-      console.warn("Failed to load users from storage", error);
+      console.warn('Failed to load users from storage', error);
       users = [];
     }
     // Attempting login
     const match = users.find((u) => u.username === username && u.password === password);
     // Login match found or not
     if (!match) {
-      alert("Invalid credentials");
+      alert('Invalid credentials');
       return;
     }
 
@@ -244,17 +244,17 @@ class RecordKeeper {
     this.showDashboard();
 
     // Clear form
-    document.getElementById("username").value = "";
-    document.getElementById("password").value = "";
-    document.getElementById("branch").value = "";
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('branch').value = '';
   }
 
   // Logout functionality
   handleLogout() {
     this.isLoggedIn = false;
-    this.currentView = "login";
+    this.currentView = 'login';
     this.clearCurrentUser();
-    this.showPage("loginPage");
+    this.showPage('loginPage');
     this.updateProfileUI();
   }
 
@@ -262,90 +262,88 @@ class RecordKeeper {
 
   seedDefaultUsersIfNeeded() {
     try {
-      const raw = localStorage.getItem("users");
+      const raw = localStorage.getItem('users');
       const users = raw ? JSON.parse(raw) : null;
       if (!users || users.length === 0) {
         const seed = [
           // Admin user
           {
-            username: "admin",
-            password: "admin",
-            role: "admin",
-            branch: "Admin",
+            username: 'admin',
+            password: 'admin',
+            role: 'admin',
+            branch: 'Admin',
           },
           // Maganjo Branch
           {
-            username: "maganjo_manager",
-            password: "password",
-            role: "manager",
-            branch: "Maganjo",
+            username: 'maganjo_manager',
+            password: 'password',
+            role: 'manager',
+            branch: 'Maganjo',
           },
           {
-            username: "maganjo_attendant1",
-            password: "password",
-            role: "attendant",
-            branch: "Maganjo",
+            username: 'maganjo_attendant1',
+            password: 'password',
+            role: 'attendant',
+            branch: 'Maganjo',
           },
           {
-            username: "maganjo_attendant2",
-            password: "password",
-            role: "attendant",
-            branch: "Maganjo",
+            username: 'maganjo_attendant2',
+            password: 'password',
+            role: 'attendant',
+            branch: 'Maganjo',
           },
           // Matugga Branch
           {
-            username: "matugga_manager",
-            password: "password",
-            role: "manager",
-            branch: "Matugga",
+            username: 'matugga_manager',
+            password: 'password',
+            role: 'manager',
+            branch: 'Matugga',
           },
           {
-            username: "matugga_attendant1",
-            password: "password",
-            role: "attendant",
-            branch: "Matugga",
+            username: 'matugga_attendant1',
+            password: 'password',
+            role: 'attendant',
+            branch: 'Matugga',
           },
           {
-            username: "matugga_attendant2",
-            password: "password",
-            role: "attendant",
-            branch: "Matugga",
+            username: 'matugga_attendant2',
+            password: 'password',
+            role: 'attendant',
+            branch: 'Matugga',
           },
         ];
-        localStorage.setItem("users", JSON.stringify(seed));
+        localStorage.setItem('users', JSON.stringify(seed));
       }
     } catch (e) {
-      console.warn("Could not seed users", e);
+      console.warn('Could not seed users', e);
     }
   }
 
   loadCurrentUser() {
     try {
-      this.currentUser = JSON.parse(localStorage.getItem("currentUser")) || null;
+      this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
     } catch {
       this.currentUser = null;
     }
   }
 
   saveCurrentUser() {
-    if (this.currentUser) localStorage.setItem("currentUser", JSON.stringify(this.currentUser));
+    if (this.currentUser) localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
   }
 
   clearCurrentUser() {
-    localStorage.removeItem("currentUser");
+    localStorage.removeItem('currentUser');
     this.currentUser = null;
   }
 
   updateProfileUI() {
     try {
-      const roleEl = document.getElementById("profileRole");
-      const nameEl = document.getElementById("profileName");
-      if (roleEl)
-        roleEl.textContent = this.currentUser ? this.currentUser.role.toUpperCase() : "Guest";
-      if (nameEl)
-        nameEl.textContent = this.currentUser ? this.currentUser.username : "Not logged in";
+      const roleEl = document.getElementById('profileRole');
+      const nameEl = document.getElementById('profileName');
+      if (roleEl) roleEl.textContent = this.currentUser ? this.currentUser.role.toUpperCase() : 'Guest';
+      if (nameEl) nameEl.textContent = this.currentUser ? this.currentUser.username : 'Not logged in';
     } catch (error) {
-      console.warn("Could not update profile UI", error);
+      console.warn('Could not update profile UI', error);
     }
   }
 
@@ -353,9 +351,9 @@ class RecordKeeper {
 
   computeSalesTotal(fromDate, toDate) {
     try {
-      const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+      const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
       return transactions
-        .filter((t) => t.type === "sale" && t.date >= fromDate && t.date <= toDate)
+        .filter((t) => t.type === 'sale' && t.date >= fromDate && t.date <= toDate)
         .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
     } catch {
       return 0;
@@ -364,8 +362,8 @@ class RecordKeeper {
 
   // Show dashboard
   showDashboard() {
-    this.currentView = "dashboard";
-    this.showPage("dashboardPage");
+    this.currentView = 'dashboard';
+    this.showPage('dashboardPage');
     this.updateStats();
 
     // Setup sidebar navigation after dashboard is shown
@@ -377,37 +375,37 @@ class RecordKeeper {
 
   // Show records page
   showRecordsPage() {
-    this.currentView = "records";
-    this.showPage("recordsPage");
+    this.currentView = 'records';
+    this.showPage('recordsPage');
     this.renderRecords();
   }
 
   // Update dashboard statistics
   updateStats() {
     const totalRecords = this.records.length;
-    const salesRecords = this.records.filter((r) => r.category === "sales").length;
-    const expensesRecords = this.records.filter((r) => r.category === "expenses").length;
+    const salesRecords = this.records.filter((r) => r.category === 'sales').length;
+    const expensesRecords = this.records.filter((r) => r.category === 'expenses').length;
 
     const totalRevenue = this.records
-      .filter((r) => r.category === "sales")
+      .filter((r) => r.category === 'sales')
       .reduce((sum, r) => sum + (r.amount || 0), 0);
 
     const totalExpenses = this.records
-      .filter((r) => r.category === "expenses")
+      .filter((r) => r.category === 'expenses')
       .reduce((sum, r) => sum + (r.amount || 0), 0);
 
     const netRevenue = totalRevenue - totalExpenses;
 
-    document.getElementById("totalRecords").textContent = totalRecords;
-    document.getElementById("salesCount").textContent = salesRecords;
-    document.getElementById("expensesCount").textContent = expensesRecords;
-    document.getElementById("totalRevenue").textContent = `$${netRevenue.toLocaleString()}`;
+    document.getElementById('totalRecords').textContent = totalRecords;
+    document.getElementById('salesCount').textContent = salesRecords;
+    document.getElementById('expensesCount').textContent = expensesRecords;
+    document.getElementById('totalRevenue').textContent = `$${netRevenue.toLocaleString()}`;
   }
 
   // Show add record modal
   showAddRecordModal() {
     this.currentEditId = null;
-    document.getElementById("modalTitle").textContent = "Add New Record";
+    document.getElementById('modalTitle').textContent = 'Add New Record';
     this.resetForm();
     this.showModal();
   }
@@ -418,7 +416,7 @@ class RecordKeeper {
     const record = this.records.find((r) => r.id === recordId);
 
     if (record) {
-      document.getElementById("modalTitle").textContent = "Edit Record";
+      document.getElementById('modalTitle').textContent = 'Edit Record';
       this.populateForm(record);
       this.showModal();
     }
@@ -427,62 +425,62 @@ class RecordKeeper {
   // Show modal
 
   showModal() {
-    document.getElementById("recordModal").classList.remove("hidden");
-    document.body.style.overflow = "hidden";
+    document.getElementById('recordModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
   }
 
   // Hide modal
   hideModal() {
-    document.getElementById("recordModal").classList.add("hidden");
-    document.body.style.overflow = "auto";
+    document.getElementById('recordModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
     this.resetForm();
   }
 
   // Reset form
   resetForm() {
-    document.getElementById("recordForm").reset();
-    const [dateValue] = new Date().toISOString().split("T");
-    document.getElementById("recordDate").value = dateValue;
-    document.getElementById("recordCategory").value = "sales";
-    this.toggleAmountField("sales");
+    document.getElementById('recordForm').reset();
+    const [dateValue] = new Date().toISOString().split('T');
+    document.getElementById('recordDate').value = dateValue;
+    document.getElementById('recordCategory').value = 'sales';
+    this.toggleAmountField('sales');
   }
 
   // Populate form with record data
   populateForm(record) {
-    document.getElementById("recordCategory").value = record.category;
-    document.getElementById("recordTitle").value = record.title;
-    document.getElementById("recordDescription").value = record.description;
-    document.getElementById("recordAmount").value = record.amount || "";
-    document.getElementById("recordDate").value = record.date;
+    document.getElementById('recordCategory').value = record.category;
+    document.getElementById('recordTitle').value = record.title;
+    document.getElementById('recordDescription').value = record.description;
+    document.getElementById('recordAmount').value = record.amount || '';
+    document.getElementById('recordDate').value = record.date;
     this.toggleAmountField(record.category);
   }
 
   // Toggle amount field visibility
 
   toggleAmountField(category) {
-    const amountGroup = document.getElementById("amountGroup");
-    const amountInput = document.getElementById("recordAmount");
+    const amountGroup = document.getElementById('amountGroup');
+    const amountInput = document.getElementById('recordAmount');
 
-    if (category === "sales" || category === "expenses") {
-      amountGroup.style.display = "block";
+    if (category === 'sales' || category === 'expenses') {
+      amountGroup.style.display = 'block';
       amountInput.required = true;
     } else {
-      amountGroup.style.display = "none";
+      amountGroup.style.display = 'none';
       amountInput.required = false;
-      amountInput.value = "";
+      amountInput.value = '';
     }
   }
 
   // Handle record form submission
   handleRecordSubmit() {
-    const category = document.getElementById("recordCategory").value;
-    const title = document.getElementById("recordTitle").value.trim();
-    const description = document.getElementById("recordDescription").value.trim();
-    const amount = document.getElementById("recordAmount").value;
-    const date = document.getElementById("recordDate").value;
+    const category = document.getElementById('recordCategory').value;
+    const title = document.getElementById('recordTitle').value.trim();
+    const description = document.getElementById('recordDescription').value.trim();
+    const amount = document.getElementById('recordAmount').value;
+    const date = document.getElementById('recordDate').value;
 
     if (!title || !description || !date) {
-      alert("Please fill in all required fields");
+      alert('Please fill in all required fields');
       return;
     }
 
@@ -503,7 +501,7 @@ class RecordKeeper {
     this.hideModal();
     this.updateStats();
 
-    if (this.currentView === "records") {
+    if (this.currentView === 'records') {
       this.renderRecords();
     }
   }
@@ -533,7 +531,7 @@ class RecordKeeper {
   // Delete record
   deleteRecord(id) {
     // eslint-disable-next-line no-restricted-globals
-    if (confirm("Are you sure you want to delete this record?")) {
+    if (confirm('Are you sure you want to delete this record?')) {
       this.records = this.records.filter((r) => r.id !== id);
       this.renderRecords();
       this.updateStats();
@@ -542,18 +540,17 @@ class RecordKeeper {
 
   // Render records list
   renderRecords() {
-    const recordsList = document.getElementById("recordsList");
-    const searchTerm = document.getElementById("searchRecords").value.toLowerCase();
-    const categoryFilter = document.getElementById("categoryFilter").value;
+    const recordsList = document.getElementById('recordsList');
+    const searchTerm = document.getElementById('searchRecords').value.toLowerCase();
+    const categoryFilter = document.getElementById('categoryFilter').value;
 
     let filteredRecords = this.records;
 
     // Apply search filter
     if (searchTerm) {
       filteredRecords = filteredRecords.filter(
-        (record) =>
-          record.title.toLowerCase().includes(searchTerm) ||
-          record.description.toLowerCase().includes(searchTerm)
+        (record) => record.title.toLowerCase().includes(searchTerm)
+          || record.description.toLowerCase().includes(searchTerm),
       );
     }
 
@@ -573,19 +570,19 @@ class RecordKeeper {
       return;
     }
 
-    recordsList.innerHTML = filteredRecords.map((record) => this.renderRecordItem(record)).join("");
+    recordsList.innerHTML = filteredRecords.map((record) => this.renderRecordItem(record)).join('');
 
     // Add event listeners to record actions
-    recordsList.querySelectorAll(".edit-record").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const recordId = e.target.closest(".record-item").dataset.id;
+    recordsList.querySelectorAll('.edit-record').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const recordId = e.target.closest('.record-item').dataset.id;
         this.showEditRecordModal(recordId);
       });
     });
 
-    recordsList.querySelectorAll(".delete-record").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const recordId = e.target.closest(".record-item").dataset.id;
+    recordsList.querySelectorAll('.delete-record').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const recordId = e.target.closest('.record-item').dataset.id;
         this.deleteRecord(recordId);
       });
     });
@@ -597,13 +594,13 @@ class RecordKeeper {
     const formattedDate = new Date(record.date).toLocaleDateString();
     const categoryClass = `category-${record.category}`;
     const categoryLabel = record.category
-      .replace("-", " ")
+      .replace('-', ' ')
       .replace(/\b\w/g, (l) => l.toUpperCase());
 
-    let amountDisplay = "";
+    let amountDisplay = '';
     if (record.amount !== undefined) {
-      const amountClass = record.category === "sales" ? "positive" : "negative";
-      const sign = record.category === "sales" ? "+" : "-";
+      const amountClass = record.category === 'sales' ? 'positive' : 'negative';
+      const sign = record.category === 'sales' ? '+' : '-';
       amountDisplay = `<span class="record-amount ${amountClass}">${sign}$${record.amount.toLocaleString()}</span>`;
     }
 
@@ -632,7 +629,7 @@ class RecordKeeper {
 
   // Filter records based on search and category
   filterRecords() {
-    if (this.currentView === "records") {
+    if (this.currentView === 'records') {
       this.renderRecords();
     }
   }
@@ -642,64 +639,64 @@ class RecordKeeper {
     this.salesData = {
       now: [
         {
-          clientName: "John Smith",
-          productId: "PRD-001",
-          unit: "5",
-          amount: "$2,500",
-          date: "2025-12-12",
+          clientName: 'John Smith',
+          productId: 'PRD-001',
+          unit: '5',
+          amount: '$2,500',
+          date: '2025-12-12',
         },
         {
-          clientName: "Sarah Johnson",
-          productId: "PRD-002",
-          unit: "3",
-          amount: "$1,800",
-          date: "2025-12-11",
+          clientName: 'Sarah Johnson',
+          productId: 'PRD-002',
+          unit: '3',
+          amount: '$1,800',
+          date: '2025-12-11',
         },
         {
-          clientName: "Mike Davis",
-          productId: "PRD-003",
-          unit: "2",
-          amount: "$1,200",
-          date: "2025-12-10",
+          clientName: 'Mike Davis',
+          productId: 'PRD-003',
+          unit: '2',
+          amount: '$1,200',
+          date: '2025-12-10',
         },
       ],
       delivered: [
         {
-          clientName: "Lisa Wilson",
-          productId: "PRD-001",
-          unit: "4",
-          amount: "$2,000",
-          date: "2025-12-08",
+          clientName: 'Lisa Wilson',
+          productId: 'PRD-001',
+          unit: '4',
+          amount: '$2,000',
+          date: '2025-12-08',
         },
         {
-          clientName: "Tom Brown",
-          productId: "PRD-004",
-          unit: "6",
-          amount: "$3,600",
-          date: "2025-12-07",
+          clientName: 'Tom Brown',
+          productId: 'PRD-004',
+          unit: '6',
+          amount: '$3,600',
+          date: '2025-12-07',
         },
       ],
       cancelled: [
         {
-          clientName: "Anna Taylor",
-          productId: "PRD-002",
-          unit: "2",
-          amount: "$1,200",
-          date: "2025-12-06",
+          clientName: 'Anna Taylor',
+          productId: 'PRD-002',
+          unit: '2',
+          amount: '$1,200',
+          date: '2025-12-06',
         },
       ],
     };
 
-    this.currentSalesTab = "now";
+    this.currentSalesTab = 'now';
     this.renderSalesTable();
   }
 
   // Setup tab navigation for sales section
   setupTabNavigation() {
-    const tabButtons = document.querySelectorAll(".tab-btn");
+    const tabButtons = document.querySelectorAll('.tab-btn');
     tabButtons.forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const tabName = e.target.getAttribute("data-tab");
+      btn.addEventListener('click', (e) => {
+        const tabName = e.target.getAttribute('data-tab');
         this.switchSalesTab(tabName);
       });
     });
@@ -708,10 +705,10 @@ class RecordKeeper {
   // Switch between sales tabs
   switchSalesTab(tabName) {
     // Update active tab
-    document.querySelectorAll(".tab-btn").forEach((btn) => {
-      btn.classList.remove("active");
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.classList.remove('active');
     });
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add("active");
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
     // Update current tab and render table
     this.currentSalesTab = tabName;
@@ -720,7 +717,7 @@ class RecordKeeper {
 
   // Render sales table based on current tab
   renderSalesTable() {
-    const tableBody = document.getElementById("salesTableBody");
+    const tableBody = document.getElementById('salesTableBody');
     if (!tableBody) return;
 
     const data = this.salesData[this.currentSalesTab] || [];
@@ -735,32 +732,32 @@ class RecordKeeper {
                 <td>${sale.amount}</td>
                 <td>${sale.date}</td>
             </tr>
-        `
+        `,
       )
-      .join("");
+      .join('');
   }
 
   // Setup sidebar navigation event listeners
   setupSidebarNavigation() {
-    const navLinks = document.querySelectorAll(".nav-link");
+    const navLinks = document.querySelectorAll('.nav-link');
     // Setting up navigation
 
     navLinks.forEach((link) => {
-      link.addEventListener("click", (e) => {
+      link.addEventListener('click', (e) => {
         e.preventDefault();
         // Navigation clicked
 
         // Get the navigation item text
-        const navText = link.querySelector("span:last-child").textContent.trim();
+        const navText = link.querySelector('span:last-child').textContent.trim();
         // Navigation text found
 
         // Remove active class from all nav items
-        document.querySelectorAll(".nav-item").forEach((item) => {
-          item.classList.remove("active");
+        document.querySelectorAll('.nav-item').forEach((item) => {
+          item.classList.remove('active');
         });
 
         // Add active class to clicked item
-        link.parentElement.classList.add("active");
+        link.parentElement.classList.add('active');
 
         // Handle navigation based on the clicked item
         this.handleNavigation(navText);
@@ -771,28 +768,28 @@ class RecordKeeper {
   // Handle navigation to different sections
   handleNavigation(section) {
     switch (section.toLowerCase()) {
-      case "accounts":
+      case 'accounts':
         this.showAccountsSection();
         break;
-      case "sales track":
+      case 'sales track':
         this.showSalesTrackSection();
         break;
-      case "stock":
+      case 'stock':
         this.showStockSection();
         break;
-      case "invoices":
+      case 'invoices':
         this.showInvoicesSection();
         break;
-      case "task schedule":
+      case 'task schedule':
         this.showTaskScheduleSection();
         break;
-      case "communication":
+      case 'communication':
         this.showCommunicationSection();
         break;
-      case "report":
+      case 'report':
         this.showReportSection();
         break;
-      case "support":
+      case 'support':
         this.showSupportSection();
         break;
       default:
@@ -803,7 +800,7 @@ class RecordKeeper {
   // Show Accounts section
 
   showAccountsSection() {
-    const mainContent = document.querySelector(".main-content");
+    const mainContent = document.querySelector('.main-content');
     mainContent.innerHTML = `
             <div class="section-header">
                 <h1>Accounts Management</h1>
@@ -833,7 +830,7 @@ class RecordKeeper {
 
   // Show Sales Track section
   showSalesTrackSection() {
-    const mainContent = document.querySelector(".main-content");
+    const mainContent = document.querySelector('.main-content');
 
     // Compute sales totals from transactions (single source of truth)
     const today = new Date();
@@ -855,7 +852,7 @@ class RecordKeeper {
     const growthRate = prevMonthSales
       ? ((monthSales - prevMonthSales) / Math.abs(prevMonthSales)) * 100
       : 0;
-    const growthLabel = `${growthRate >= 0 ? "+" : ""}${growthRate.toFixed(1)}%`;
+    const growthLabel = `${growthRate >= 0 ? '+' : ''}${growthRate.toFixed(1)}%`;
 
     function fmt(v) {
       return `$${v.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 0 })}`;
@@ -889,7 +886,7 @@ class RecordKeeper {
   // Show Stock section
 
   showStockSection() {
-    const mainContent = document.querySelector(".main-content");
+    const mainContent = document.querySelector('.main-content');
     mainContent.innerHTML = `
             <div class="section-header">
                 <h1>Stock Management</h1>
@@ -920,7 +917,7 @@ class RecordKeeper {
   // Show Invoices section
 
   showInvoicesSection() {
-    const mainContent = document.querySelector(".main-content");
+    const mainContent = document.querySelector('.main-content');
     mainContent.innerHTML = `
             <div class="section-header">
                 <h1>Invoice Management</h1>
@@ -951,7 +948,7 @@ class RecordKeeper {
   // Show Task Schedule section
 
   showTaskScheduleSection() {
-    const mainContent = document.querySelector(".main-content");
+    const mainContent = document.querySelector('.main-content');
     mainContent.innerHTML = `
             <div class="section-header">
                 <h1>Task Schedule</h1>
@@ -982,7 +979,7 @@ class RecordKeeper {
   // Show Communication section
 
   showCommunicationSection() {
-    const mainContent = document.querySelector(".main-content");
+    const mainContent = document.querySelector('.main-content');
     mainContent.innerHTML = `
             <div class="section-header">
                 <h1>Communication Center</h1>
@@ -1013,7 +1010,7 @@ class RecordKeeper {
   // Show Report section
 
   showReportSection() {
-    const mainContent = document.querySelector(".main-content");
+    const mainContent = document.querySelector('.main-content');
     mainContent.innerHTML = `
             <div class="section-header">
                 <h1>Reports & Analytics</h1>
@@ -1042,7 +1039,7 @@ class RecordKeeper {
   // Show Support section
 
   showSupportSection() {
-    const mainContent = document.querySelector(".main-content");
+    const mainContent = document.querySelector('.main-content');
     mainContent.innerHTML = `
             <div class="section-header">
                 <h1>Support Center</h1>
@@ -1070,7 +1067,7 @@ class RecordKeeper {
 
   // Show default dashboard (original content)
   showDefaultDashboard() {
-    const mainContent = document.querySelector(".main-content");
+    const mainContent = document.querySelector('.main-content');
     mainContent.innerHTML = `
             <!-- Search Bar -->
             <div class="search-section">
@@ -1121,17 +1118,17 @@ class RecordKeeper {
 }
 
 // Initialize the application when the DOM is loaded
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
   window.recordKeeper = new RecordKeeper();
 });
 
 // Utility functions for date formatting and validation
 function formatDate(dateString) {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   });
 }
 
@@ -1142,7 +1139,7 @@ function validateEmail(email) {
 
 function validatePhone(phone) {
   const re = /^\+?[1-9][\d]{0,15}$/;
-  return re.test(phone.replace(/\s/g, ""));
+  return re.test(phone.replace(/\s/g, ''));
 }
 
 // -----------------------
@@ -1152,7 +1149,7 @@ function validatePhone(phone) {
 // Return transactions array from localStorage
 function getStoredTransactions() {
   try {
-    return JSON.parse(localStorage.getItem("transactions") || "[]");
+    return JSON.parse(localStorage.getItem('transactions') || '[]');
   } catch {
     return [];
   }
@@ -1160,9 +1157,9 @@ function getStoredTransactions() {
 
 function saveStoredTransactions(txs) {
   try {
-    localStorage.setItem("transactions", JSON.stringify(txs || []));
+    localStorage.setItem('transactions', JSON.stringify(txs || []));
   } catch (e) {
-    console.warn("Could not save transactions", e);
+    console.warn('Could not save transactions', e);
   }
 }
 
@@ -1172,7 +1169,7 @@ function addStoredTransaction(tx) {
     txs.unshift(tx);
     saveStoredTransactions(txs);
   } catch (e) {
-    console.warn("Could not add transaction", e);
+    console.warn('Could not add transaction', e);
   }
 }
 
@@ -1184,17 +1181,17 @@ window.addStoredTransaction = addStoredTransaction;
 
 function addActivityLog(action, data) {
   try {
-    const a = JSON.parse(localStorage.getItem("activityLog") || "[]");
+    const a = JSON.parse(localStorage.getItem('activityLog') || '[]');
     a.unshift({
       id: Date.now().toString(),
       action,
       data: data || {},
-      user: (JSON.parse(localStorage.getItem("currentUser")) || {}).username || "System",
+      user: (JSON.parse(localStorage.getItem('currentUser')) || {}).username || 'System',
       timestamp: new Date().toISOString(),
     });
-    localStorage.setItem("activityLog", JSON.stringify(a));
+    localStorage.setItem('activityLog', JSON.stringify(a));
   } catch (e) {
-    console.warn("Could not add activity", e);
+    console.warn('Could not add activity', e);
   }
 }
 
@@ -1205,33 +1202,31 @@ RecordKeeper.prototype.migrateTransactionsFromModules = function migrateTransact
     let added = 0;
 
     // helper: check existing by type+amount+date
-    const exists = (type, amount, dateStr, descFragment) =>
-      txs.some(
-        (t) =>
-          t.type === type &&
-          Math.abs((parseFloat(t.amount) || 0) - (parseFloat(amount) || 0)) < 0.01 &&
-          t.date === dateStr &&
-          (descFragment ? (t.description || "").includes(descFragment) : true)
-      );
+    const exists = (type, amount, dateStr, descFragment) => txs.some(
+      (t) => t.type === type
+          && Math.abs((parseFloat(t.amount) || 0) - (parseFloat(amount) || 0)) < 0.01
+          && t.date === dateStr
+          && (descFragment ? (t.description || '').includes(descFragment) : true),
+    );
 
     // backfill sales
     if (window.salesManager && Array.isArray(window.salesManager.sales)) {
       window.salesManager.sales.forEach((sale) => {
         const date = sale.saleDate || new Date().toISOString().slice(0, 10);
-        if (!exists("sale", sale.total, date, sale.itemName)) {
+        if (!exists('sale', sale.total, date, sale.itemName)) {
           const tx = {
             id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
             date,
-            type: "sale",
+            type: 'sale',
             amount: sale.total,
-            account: "cash",
+            account: 'cash',
             description: `Sale: ${sale.itemName}`,
-            user: (JSON.parse(localStorage.getItem("currentUser")) || {}).username || "System",
+            user: (JSON.parse(localStorage.getItem('currentUser')) || {}).username || 'System',
           };
           txs.unshift(tx);
           added += 1;
-          addActivityLog("migration-add-transaction", {
-            source: "sales",
+          addActivityLog('migration-add-transaction', {
+            source: 'sales',
             amount: sale.total,
             id: tx.id,
           });
@@ -1242,24 +1237,24 @@ RecordKeeper.prototype.migrateTransactionsFromModules = function migrateTransact
     // backfill paid invoices
     if (window.invoiceManager && Array.isArray(window.invoiceManager.invoices)) {
       window.invoiceManager.invoices.forEach((inv) => {
-        if (inv.status === "paid") {
+        if (inv.status === 'paid') {
           const date = inv.paidDate
             ? new Date(inv.paidDate).toISOString().slice(0, 10)
             : inv.invoiceDate || new Date().toISOString().slice(0, 10);
-          if (!exists("invoice-payment", inv.total, date, inv.number)) {
+          if (!exists('invoice-payment', inv.total, date, inv.number)) {
             const tx = {
               id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
               date,
-              type: "invoice-payment",
+              type: 'invoice-payment',
               amount: inv.total,
-              account: "bank",
+              account: 'bank',
               description: `Payment for ${inv.number}`,
-              user: (JSON.parse(localStorage.getItem("currentUser")) || {}).username || "System",
+              user: (JSON.parse(localStorage.getItem('currentUser')) || {}).username || 'System',
             };
             txs.unshift(tx);
             added += 1;
-            addActivityLog("migration-add-transaction", {
-              source: "invoices",
+            addActivityLog('migration-add-transaction', {
+              source: 'invoices',
               invoice: inv.number,
               amount: inv.total,
               id: tx.id,
@@ -1276,19 +1271,19 @@ RecordKeeper.prototype.migrateTransactionsFromModules = function migrateTransact
       try {
         if (window.reportsManager) window.reportsManager.renderReportsTable();
       } catch (error) {
-        console.warn("Failed to refresh reports table", error);
+        console.warn('Failed to refresh reports table', error);
       }
       try {
         if (window.recordKeeper) {
           /* re-render sales track if visible */
         }
       } catch (error) {
-        console.warn("Failed to refresh record keeper view", error);
+        console.warn('Failed to refresh record keeper view', error);
       }
-      addActivityLog("migration-complete", { added });
-      console.warn("Migration added", added, "transactions");
+      addActivityLog('migration-complete', { added });
+      console.warn('Migration added', added, 'transactions');
     }
   } catch (e) {
-    console.warn("Migration failed", e);
+    console.warn('Migration failed', e);
   }
 };

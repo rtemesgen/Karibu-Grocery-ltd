@@ -33,11 +33,17 @@
       users = [
         // Admin user
         {
-          username: 'admin', password: 'admin', role: 'admin', branch: 'Admin',
+          username: 'admin',
+          password: 'admin',
+          role: 'admin',
+          branch: 'Admin',
         },
         // Maganjo Branch
         {
-          username: 'maganjo_manager', password: 'password', role: 'manager', branch: 'Maganjo',
+          username: 'maganjo_manager',
+          password: 'password',
+          role: 'manager',
+          branch: 'Maganjo',
         },
         {
           username: 'maganjo_attendant1',
@@ -53,7 +59,10 @@
         },
         // Matugga Branch
         {
-          username: 'matugga_manager', password: 'password', role: 'manager', branch: 'Matugga',
+          username: 'matugga_manager',
+          password: 'password',
+          role: 'manager',
+          branch: 'Matugga',
         },
         {
           username: 'matugga_attendant1',
@@ -168,7 +177,10 @@
       return;
     }
     users.push({
-      username, password: password || 'password', role, branch,
+      username,
+      password: password || 'password',
+      role,
+      branch,
     });
     saveUsers();
     addActivity('add-user', { user: username });

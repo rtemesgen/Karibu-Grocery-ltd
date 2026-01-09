@@ -10,12 +10,7 @@ const compat = new FlatCompat({ baseDirectory: baseDir });
 
 export default defineConfig([
   {
-    ignores: [
-      "node_modules/**",
-      "dist/**",
-      "build/**",
-      "eslint.config.mjs",
-    ],
+    ignores: ["node_modules/**", "dist/**", "build/**", "eslint.config.mjs", "pluto-1.0.0/**"],
   },
   // Airbnb base (legacy config via compat)
   ...compat.extends("airbnb-base"),

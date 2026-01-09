@@ -1,5 +1,5 @@
 // Lightweight profile sync script: shows logged-in user role and username on any page
-(function () {
+(function profileBootstrap() {
   function refreshProfileUI() {
     try {
       const cuRaw = localStorage.getItem('currentUser');
@@ -20,7 +20,7 @@
   }
 
   // Global logout handler used by buttons across pages
-  window.handleGlobalLogout = function (e) {
+  window.handleGlobalLogout = function handleGlobalLogout(e) {
     if (e && e.preventDefault) e.preventDefault();
     try {
       localStorage.removeItem('currentUser');

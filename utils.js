@@ -1,5 +1,5 @@
 /* eslint-disable class-methods-use-this */
-(function () {
+(function utilsModule() {
   class BaseManager {
     qs(selector, root = document) {
       return root.querySelector(selector);

@@ -1,5 +1,5 @@
 // Shared sidebar navigation component
-(function () {
+(function sidebarModule() {
   const navItems = [
     { href: 'accounts.html', label: 'Accounts' },
     { href: 'sales.html', label: 'Sales track' },
