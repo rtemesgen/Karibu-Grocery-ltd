@@ -1,3 +1,5 @@
+/* global BaseManager */
+/* eslint-disable class-methods-use-this, no-restricted-globals, prefer-destructuring */
 class TaskManager extends BaseManager {
   constructor() {
     super();

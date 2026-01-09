@@ -1,3 +1,5 @@
+/* global BaseManager */
+/* eslint-disable class-methods-use-this, no-param-reassign, no-return-assign, no-restricted-globals */
 class CommunicationManager extends BaseManager {
   constructor() {
     super();

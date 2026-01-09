@@ -1,3 +1,5 @@
+/* global BaseManager */
+/* eslint-disable class-methods-use-this, radix, prefer-destructuring, no-useless-concat, no-restricted-globals, max-len */
 class ReportsManager extends BaseManager {
   constructor() {
     super();

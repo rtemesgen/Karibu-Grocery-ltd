@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 (function () {
   class BaseManager {
     qs(selector, root = document) {

@@ -9,6 +9,14 @@ const baseDir = fileURLToPath(new URL(".", import.meta.url));
 const compat = new FlatCompat({ baseDirectory: baseDir });
 
 export default defineConfig([
+  {
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      "eslint.config.mjs",
+    ],
+  },
   // Airbnb base (legacy config via compat)
   ...compat.extends("airbnb-base"),
   // Our project defaults

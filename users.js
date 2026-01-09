@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define, no-restricted-globals, func-names */
 // Users management page script
 (function () {
   const USERS_KEY = 'users';

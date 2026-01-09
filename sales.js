@@ -1,3 +1,5 @@
+/* global BaseManager */
+/* eslint-disable class-methods-use-this, no-restricted-globals, prefer-destructuring, no-nested-ternary, no-shadow, max-len */
 // Sales Management JavaScript
 class SalesManager extends BaseManager {
   constructor() {

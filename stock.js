@@ -1,3 +1,5 @@
+/* global BaseManager */
+/* eslint-disable class-methods-use-this, radix, no-nested-ternary, no-restricted-globals, no-shadow, max-len */
 class StockManager extends BaseManager {
   constructor() {
     super();

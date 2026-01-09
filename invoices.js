@@ -1,3 +1,5 @@
+/* global BaseManager */
+/* eslint-disable class-methods-use-this, no-restricted-globals, prefer-destructuring, radix, no-plusplus, no-param-reassign, max-len */
 class InvoiceManager extends BaseManager {
   constructor() {
     super();

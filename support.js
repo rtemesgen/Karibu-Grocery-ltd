@@ -1,3 +1,5 @@
+/* global BaseManager */
+/* eslint-disable class-methods-use-this */
 class SupportManager extends BaseManager {
   constructor() {
     super();

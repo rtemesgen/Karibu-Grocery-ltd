@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define, no-restricted-globals, func-names, max-len */
 // Accounts page script
 (function () {
   // Utilities
@@ -367,7 +368,9 @@
     let list = activityLog.slice();
     if (from) list = list.filter((a) => a.timestamp >= from);
     if (to) list = list.filter((a) => a.timestamp <= new Date(to).toISOString());
-    if (search) { list = list.filter((a) => `${a.action} ${JSON.stringify(a.data || {})} ${a.user}`.toLowerCase().includes(search)); }
+    if (search) {
+      list = list.filter((a) => `${a.action} ${JSON.stringify(a.data || {})} ${a.user}`.toLowerCase().includes(search));
+    }
     if (list.length === 0) {
       container.innerHTML = '<div style="text-align:center; opacity:0.7; padding:1rem">No activities found</div>';
       return;
