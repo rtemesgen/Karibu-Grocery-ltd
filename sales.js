@@ -1,6 +1,7 @@
 // Sales Management JavaScript
-class SalesManager {
+class SalesManager extends BaseManager {
   constructor() {
+    super();
     this.ALLOWED_PRODUCTS = ['Beans', 'Grain Maize', 'Cow peas', 'G-nuts', 'Soybeans'];
     this.inventory = this.loadInventory();
     this.sales = this.getInitialSales();
@@ -8,45 +9,36 @@ class SalesManager {
   }
 
   loadInventory() {
-    try {
-      const stored = localStorage.getItem('stockItems');
-      if (stored) {
-        const items = JSON.parse(stored);
-        // Map stockItems to inventory format with selling price
-        return items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          category: item.category || 'grains',
-          quantity: item.quantity || 0,
-          price: item.sellingPrice || 0,
-          costPrice: item.costPrice || 0,
-          minStock: item.minStock || 1000,
-        }));
-      }
-    } catch (e) {
-      console.warn('Failed to load stockItems for sales', e);
+    const stored = this.loadFromStorage('stockItems');
+    if (stored) {
+      // Map stockItems to inventory format with selling price
+      return stored.map((item) => ({
+        id: item.id,
+        name: item.name,
+        category: item.category || 'grains',
+        quantity: item.quantity || 0,
+        price: item.sellingPrice || 0,
+        costPrice: item.costPrice || 0,
+        minStock: item.minStock || 1000,
+      }));
     }
     return this.getInitialInventory();
   }
 
   persistInventory() {
-    try {
-      // Map back to stockItems format with costPrice, minStock, etc.
-      const stockItems = this.inventory.map((item) => ({
-        id: item.id,
-        name: item.name,
-        sku: item.sku || '',
-        category: item.category || 'grains',
-        quantity: item.quantity,
-        minStock: item.minStock || 1000,
-        costPrice: item.costPrice || 0,
-        sellingPrice: item.price,
-        batches: item.batches || [],
-      }));
-      localStorage.setItem('stockItems', JSON.stringify(stockItems));
-    } catch (e) {
-      console.warn('Failed to persist stockItems from sales', e);
-    }
+    // Map back to stockItems format with costPrice, minStock, etc.
+    const stockItems = this.inventory.map((item) => ({
+      id: item.id,
+      name: item.name,
+      sku: item.sku || '',
+      category: item.category || 'grains',
+      quantity: item.quantity,
+      minStock: item.minStock || 1000,
+      costPrice: item.costPrice || 0,
+      sellingPrice: item.price,
+      batches: item.batches || [],
+    }));
+    this.saveToStorage('stockItems', stockItems);
   }
 
   init() {
@@ -64,13 +56,8 @@ class SalesManager {
     // Refresh metrics when transactions or sales change in localStorage
     window.addEventListener('storage', (e) => {
       if (e.key === 'transactions' || e.key === 'sales') {
-        // Re-read persisted sales if they changed elsewhere
         if (e.key === 'sales') {
-          try {
-            this.sales = JSON.parse(localStorage.getItem('sales') || '[]');
-          } catch (err) {
-            console.warn('Failed to reload sales from storage', err);
-          }
+          this.sales = this.loadFromStorage('sales', []);
         }
         this.updateDashboardMetrics();
       }
@@ -212,7 +199,7 @@ class SalesManager {
         const minStock = item.minStock || 1000;
         const isLow = item.quantity <= minStock;
         const isOut = item.quantity === 0;
-        const stockStatus = isOut ? 'out-of-stock' : isLow ? 'low-stock' : 'in-stock';
+        const badgeClass = isOut ? 'bg-danger' : isLow ? 'bg-warning' : 'bg-success';
         const statusText = isOut ? 'Out of Stock' : isLow ? 'Low Stock' : 'In Stock';
         const statusIcon = isOut
           ? '<i class="fas fa-exclamation-circle"></i>'
@@ -220,17 +207,21 @@ class SalesManager {
             ? '<i class="fas fa-exclamation-triangle"></i>'
             : '<i class="fas fa-check-circle"></i>';
         return `
-                <div class="inventory-item ${stockStatus}">
-                    <div class="item-header">
-                        <h4>${item.name}</h4>
-                        <span class="category-badge">${item.category}</span>
-                    </div>
-                    <div class="item-details">
-                        <p class="quantity">Qty: ${item.quantity} kg</p>
-                        <p class="price">UGX ${(item.price || 0).toLocaleString()}</p>
-                    </div>
-                    <div class="stock-status">
-                        ${statusIcon} ${statusText}
+                <div class="col-md-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">${item.name}</h5>
+                                <span class="badge bg-secondary">${item.category}</span>
+                            </div>
+                            <div class="mb-3">
+                                <p class="mb-1 text-muted">Qty: <strong>${item.quantity} kg</strong></p>
+                                <p class="mb-1 text-muted">Price: <strong>UGX ${(item.price || 0).toLocaleString()}</strong></p>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge ${badgeClass}">${statusIcon} ${statusText}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -257,10 +248,10 @@ class SalesManager {
                 <td>UGX ${(sale.unitPrice || 0).toLocaleString()}</td>
                 <td>UGX ${(sale.total || 0).toLocaleString()}</td>
                 <td>
-                    <button class="btn-edit" onclick="salesManager.editSale('${sale.id}')">
+                    <button class="btn btn-sm btn-outline-primary" onclick="salesManager.editSale('${sale.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-delete" onclick="salesManager.deleteSale('${sale.id}')">
+                    <button class="btn btn-sm btn-outline-danger" onclick="salesManager.deleteSale('${sale.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -302,12 +293,11 @@ class SalesManager {
 
   exportSales() {
     const csvContent = 'data:text/csv;charset=utf-8,'
-      + `Date,Item,Customer,Quantity,Unit Price,Total\n${
-        this.sales
-          .map(
-            (sale) => `${sale.saleDate},${sale.itemName},${sale.customerName},${sale.quantity},${sale.unitPrice},${sale.total}`,
-          )
-          .join('\n')}`;
+      + `Date,Item,Customer,Quantity,Unit Price,Total\n${this.sales
+        .map(
+          (sale) => `${sale.saleDate},${sale.itemName},${sale.customerName},${sale.quantity},${sale.unitPrice},${sale.total}`,
+        )
+        .join('\n')}`;
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
@@ -320,63 +310,48 @@ class SalesManager {
     this.showNotification('Sales exported successfully', 'success');
   }
 
-  showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}"></i>
-            ${message}
-        `;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-      notification.classList.add('show');
-    }, 100);
-
-    setTimeout(() => {
-      notification.classList.remove('show');
-      setTimeout(() => {
-        document.body.removeChild(notification);
-      }, 300);
-    }, 3000);
-  }
-
-  formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  }
-
   getInitialInventory() {
     return [
       {
-        id: 1, name: 'Beans', category: 'grains', quantity: 5000, price: 3500,
+        id: 1,
+        name: 'Beans',
+        category: 'grains',
+        quantity: 5000,
+        price: 3500,
       },
       {
-        id: 2, name: 'Grain Maize', category: 'grains', quantity: 8000, price: 3000,
+        id: 2,
+        name: 'Grain Maize',
+        category: 'grains',
+        quantity: 8000,
+        price: 3000,
       },
       {
-        id: 3, name: 'Cow peas', category: 'grains', quantity: 3500, price: 4200,
+        id: 3,
+        name: 'Cow peas',
+        category: 'grains',
+        quantity: 3500,
+        price: 4200,
       },
       {
-        id: 4, name: 'G-nuts', category: 'grains', quantity: 2000, price: 6000,
+        id: 4,
+        name: 'G-nuts',
+        category: 'grains',
+        quantity: 2000,
+        price: 6000,
       },
       {
-        id: 5, name: 'Soybeans', category: 'grains', quantity: 4500, price: 5000,
+        id: 5,
+        name: 'Soybeans',
+        category: 'grains',
+        quantity: 4500,
+        price: 5000,
       },
     ];
   }
 
   getInitialSales() {
-    try {
-      return JSON.parse(localStorage.getItem('sales') || '[]');
-    } catch {
-      return [];
-    }
+    return this.loadFromStorage('sales', []);
   }
 
   // Update dashboard metrics with real data
@@ -440,11 +415,7 @@ class SalesManager {
 
   // Persist current sales list
   persistSales() {
-    try {
-      localStorage.setItem('sales', JSON.stringify(this.sales || []));
-    } catch (e) {
-      console.warn('Could not persist sales', e);
-    }
+    this.saveToStorage('sales', this.sales || []);
   }
 
   // If there are no saved sales, try to build a recent list from transactions

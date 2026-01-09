@@ -4,11 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reports & Analytics - KARIBU GROCERIES .LTD</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="dashboard-container">
@@ -72,16 +76,16 @@
       </div>
 
       <div class="main-content">
-        <div class="sales-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
           <h1>Reports & Analytics</h1>
-          <div class="header-actions">
-            <button id="generateReportBtn" class="btn-primary">
+          <div class="d-flex gap-2">
+            <button id="generateReportBtn" class="btn btn-primary">
               <i class="fas fa-chart-bar"></i> Generate Report
             </button>
-            <button id="exportAllBtn" class="btn-secondary">
+            <button id="exportAllBtn" class="btn btn-secondary">
               <i class="fas fa-download"></i> Export All
             </button>
-            <button class="btn-secondary" onclick="handleGlobalLogout(event)">
+            <button class="btn btn-secondary" onclick="handleGlobalLogout(event)">
               <i class="fas fa-sign-out-alt"></i> Logout
             </button>
           </div>
@@ -215,38 +219,52 @@
         </div>
 
         <!-- Generated Reports List -->
-        <div class="recent-sales-section">
-          <div class="section-header-inline">
-            <h2>Generated Reports</h2>
-            <div class="filter-controls">
-              <select id="reportTypeFilter">
-                <option value="">All Types</option>
-                <option value="sales">Sales</option>
-                <option value="financial">Financial</option>
-                <option value="inventory">Inventory</option>
-                <option value="customer">Customer</option>
-              </select>
-              <input type="text" id="searchReports" placeholder="Search reports..." />
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h2 class="card-title mb-0">Generated Reports</h2>
+              <div class="d-flex gap-2">
+                <select
+                  id="reportTypeFilter"
+                  class="form-select form-select-sm"
+                  style="width: auto"
+                >
+                  <option value="">All Types</option>
+                  <option value="sales">Sales</option>
+                  <option value="financial">Financial</option>
+                  <option value="inventory">Inventory</option>
+                  <option value="customer">Customer</option>
+                </select>
+                <input
+                  type="text"
+                  id="searchReports"
+                  class="form-control form-control-sm"
+                  placeholder="Search reports..."
+                  style="width: 200px"
+                />
+              </div>
             </div>
-          </div>
-          <div class="sales-table-wrapper">
-            <table class="sales-table">
-              <thead>
-                <tr>
-                  <th>Report Name</th>
-                  <th>Type</th>
-                  <th>Date Range</th>
-                  <th>Generated On</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="reportsTableBody"></tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Report Name</th>
+                    <th>Type</th>
+                    <th>Date Range</th>
+                    <th>Generated On</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="utils.js"></script>
     <script src="reports.js"></script>
     <script src="profile.js"></script>
   </body>

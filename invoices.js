@@ -1,5 +1,6 @@
-class InvoiceManager {
+class InvoiceManager extends BaseManager {
   constructor() {
+    super();
     this.invoices = this.getInitialInvoices();
     this.currentEditId = null;
     this.invoiceCounter = 1005;
@@ -163,7 +164,10 @@ class InvoiceManager {
       const price = parseFloat(row.querySelector('.item-price').value);
       if (description && quantity && price) {
         items.push({
-          description, quantity, price, total: quantity * price,
+          description,
+          quantity,
+          price,
+          total: quantity * price,
         });
       }
     });
@@ -317,26 +321,6 @@ class InvoiceManager {
       this.showNotification('Invoice viewer would open here', 'info');
       // In a real app, this would open a detailed invoice view or PDF
     }
-  }
-
-  formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  }
-
-  showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : 'info'}"></i> ${message}`;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.classList.add('show'), 100);
-    setTimeout(() => {
-      notification.classList.remove('show');
-      setTimeout(() => document.body.removeChild(notification), 300);
-    }, 3000);
   }
 
   getInitialInvoices() {

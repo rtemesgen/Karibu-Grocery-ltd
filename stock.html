@@ -4,11 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stock Management - KARIBU GROCERIES .LTD</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="dashboard-container">
@@ -73,52 +77,70 @@
       </div>
 
       <div class="main-content">
-        <div class="sales-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
           <h1>Stock Management</h1>
-          <div class="header-actions">
-            <button id="addItemBtn" class="btn-primary">
+          <div class="d-flex gap-2">
+            <button id="addItemBtn" class="btn btn-primary">
               <i class="fas fa-plus"></i> Receive Stock
             </button>
-            <button class="btn-secondary" onclick="handleGlobalLogout(event)">
+            <button class="btn btn-secondary" onclick="handleGlobalLogout(event)">
               <i class="fas fa-sign-out-alt"></i> Logout
             </button>
           </div>
         </div>
 
         <!-- Stock Overview -->
-        <div class="sales-overview">
-          <div class="overview-card">
-            <div class="card-icon items-icon"><i class="fas fa-boxes"></i></div>
-            <div class="card-content">
-              <h3>Total Items</h3>
-              <p class="card-value" id="totalItems">0</p>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+              <div class="card-body d-flex align-items-center">
+                <div class="me-3 p-3 bg-warning bg-opacity-10 rounded">
+                  <i class="fas fa-boxes fa-2x text-warning"></i>
+                </div>
+                <div>
+                  <h6 class="text-muted mb-1">Total Items</h6>
+                  <h4 class="mb-0" id="totalItems">0</h4>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="overview-card">
-            <div class="card-icon sales-icon">
-              <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <div class="card-content">
-              <h3>Low Stock</h3>
-              <p class="card-value warning" id="lowStockItems">0</p>
-            </div>
-          </div>
-          <div class="overview-card">
-            <div class="card-icon profit-icon">
-              <i class="fas fa-times-circle"></i>
-            </div>
-            <div class="card-content">
-              <h3>Out of Stock</h3>
-              <p class="card-value danger" id="outOfStockItems">0</p>
+          <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+              <div class="card-body d-flex align-items-center">
+                <div class="me-3 p-3 bg-primary bg-opacity-10 rounded">
+                  <i class="fas fa-exclamation-triangle fa-2x text-primary"></i>
+                </div>
+                <div>
+                  <h6 class="text-muted mb-1">Low Stock</h6>
+                  <h4 class="mb-0 text-warning" id="lowStockItems">0</h4>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="overview-card">
-            <div class="card-icon revenue-icon">
-              <i class="fas fa-dollar-sign"></i>
+          <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+              <div class="card-body d-flex align-items-center">
+                <div class="me-3 p-3 bg-danger bg-opacity-10 rounded">
+                  <i class="fas fa-times-circle fa-2x text-danger"></i>
+                </div>
+                <div>
+                  <h6 class="text-muted mb-1">Out of Stock</h6>
+                  <h4 class="mb-0 text-danger" id="outOfStockItems">0</h4>
+                </div>
+              </div>
             </div>
-            <div class="card-content">
-              <h3>Stock Value</h3>
-              <p class="card-value" id="stockValue">UGX 0</p>
+          </div>
+          <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+              <div class="card-body d-flex align-items-center">
+                <div class="me-3 p-3 bg-success bg-opacity-10 rounded">
+                  <i class="fas fa-dollar-sign fa-2x text-success"></i>
+                </div>
+                <div>
+                  <h6 class="text-muted mb-1">Stock Value</h6>
+                  <h4 class="mb-0" id="stockValue">UGX 0</h4>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -288,7 +310,8 @@
         </form>
       </div>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="utils.js"></script>
     <script src="stock.js"></script>
     <script src="profile.js"></script>
   </body>

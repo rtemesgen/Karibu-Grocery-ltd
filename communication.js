@@ -1,5 +1,6 @@
-class CommunicationManager {
+class CommunicationManager extends BaseManager {
   constructor() {
+    super();
     this.conversations = this.getInitialConversations();
     this.callLog = this.getInitialCallLog();
     this.notifications = this.getInitialNotifications();
@@ -16,32 +17,29 @@ class CommunicationManager {
 
   setupEventListeners() {
     // Tab switching
-    document.querySelectorAll('.tab-btn').forEach((btn) => {
+    this.qsa('.tab-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => this.switchTab(e.target.dataset.tab));
     });
 
     // Message functionality
-    document.getElementById('sendBtn').addEventListener('click', () => this.sendMessage());
-    document.getElementById('newMessage').addEventListener('keypress', (e) => {
+    this.qs('#sendBtn').addEventListener('click', () => this.sendMessage());
+    this.qs('#newMessage').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') this.sendMessage();
     });
 
     // Notification filters
-    document.querySelectorAll('.filter-btn').forEach((btn) => {
+    this.qsa('.filter-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => this.filterNotifications(e.target.dataset.filter));
     });
   }
 
   switchTab(tabName) {
     // Update tab buttons
-    document.querySelectorAll('.tab-btn').forEach((btn) => btn.classList.remove('active'));
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    this.toggleActive(this.qsa('.tab-btn'), this.qs(`[data-tab="${tabName}"]`));
 
     // Update content
-    document
-      .querySelectorAll('.tab-content')
-      .forEach((content) => (content.style.display = 'none'));
-    document.getElementById(`${tabName}Tab`).style.display = 'block';
+    this.qsa('.tab-content').forEach((content) => (content.style.display = 'none'));
+    this.qs(`#${tabName}Tab`).style.display = 'block';
   }
 
   renderConversationList() {
@@ -85,7 +83,7 @@ class CommunicationManager {
   }
 
   renderMessages() {
-    const messageBody = document.getElementById('messageBody');
+    const messageBody = this.qs('#messageBody');
     if (!this.activeConversation) return;
 
     messageBody.innerHTML = this.activeConversation.messages
@@ -181,11 +179,9 @@ class CommunicationManager {
   }
 
   filterNotifications(filter) {
-    document.querySelectorAll('.filter-btn').forEach((btn) => btn.classList.remove('active'));
-    document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+    this.toggleActive(this.qsa('.filter-btn'), this.qs(`[data-filter="${filter}"]`));
 
-    const notifications = document.querySelectorAll('.notification-item');
-    notifications.forEach((notif) => {
+    this.qsa('.notification-item').forEach((notif) => {
       if (filter === 'all' || notif.dataset.type === filter) {
         notif.style.display = 'flex';
       } else {
@@ -208,40 +204,12 @@ class CommunicationManager {
     return icons[type] || 'bell';
   }
 
-  formatTime(timestamp) {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
-  formatDateTime(timestamp) {
-    return new Date(timestamp).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
   callContact(contact) {
     this.showNotification(`Calling ${contact}...`, 'info');
   }
 
   messageContact(contact) {
     this.showNotification(`Opening message to ${contact}`, 'info');
-  }
-
-  showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : 'info'}"></i> ${message}`;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.classList.add('show'), 100);
-    setTimeout(() => {
-      notification.classList.remove('show');
-      setTimeout(() => document.body.removeChild(notification), 300);
-    }, 3000);
   }
 
   getInitialConversations() {

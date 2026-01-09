@@ -1,5 +1,6 @@
-class StockManager {
+class StockManager extends BaseManager {
   constructor() {
+    super();
     this.ALLOWED_PRODUCTS = ['Beans', 'Grain Maize', 'Cow peas', 'G-nuts', 'Soybeans'];
     this.stockItems = this.loadStock();
     this.sources = this.loadSources();
@@ -8,46 +9,46 @@ class StockManager {
   }
 
   loadStock() {
-    try {
-      const stock = localStorage.getItem('stockItems');
-      return stock ? JSON.parse(stock) : this.getInitialStock();
-    } catch (e) {
-      console.warn('Failed to load stock', e);
-      return this.getInitialStock();
-    }
+    return this.loadFromStorage('stockItems', this.getInitialStock());
   }
 
   saveStock() {
-    localStorage.setItem('stockItems', JSON.stringify(this.stockItems));
+    this.saveToStorage('stockItems', this.stockItems);
   }
 
   loadSources() {
-    try {
-      const sources = localStorage.getItem('suppliers');
-      return sources ? JSON.parse(sources) : this.getInitialSources();
-    } catch (e) {
-      console.warn('Failed to load sources', e);
-      return this.getInitialSources();
-    }
+    return this.loadFromStorage('suppliers', this.getInitialSources());
   }
 
   saveSources() {
-    localStorage.setItem('suppliers', JSON.stringify(this.sources));
+    this.saveToStorage('suppliers', this.sources);
   }
 
   getInitialSources() {
     return [
       {
-        id: '1', name: 'Maganjo Farm', type: 'farm', branch: 'Maganjo',
+        id: '1',
+        name: 'Maganjo Farm',
+        type: 'farm',
+        branch: 'Maganjo',
       },
       {
-        id: '2', name: 'Matugga Farm', type: 'farm', branch: 'Matugga',
+        id: '2',
+        name: 'Matugga Farm',
+        type: 'farm',
+        branch: 'Matugga',
       },
       {
-        id: '3', name: 'Individual Dealers', type: 'dealer', minQuantity: 1000,
+        id: '3',
+        name: 'Individual Dealers',
+        type: 'dealer',
+        minQuantity: 1000,
       },
       {
-        id: '4', name: 'Other Companies', type: 'company', minQuantity: 1000,
+        id: '4',
+        name: 'Other Companies',
+        type: 'company',
+        minQuantity: 1000,
       },
     ];
   }
@@ -64,13 +65,9 @@ class StockManager {
   setupStorageSync() {
     window.addEventListener('storage', (event) => {
       if (event.key !== 'stockItems') return;
-      try {
-        this.stockItems = event.newValue ? JSON.parse(event.newValue) : [];
-        this.renderStockTable();
-        this.updateOverview();
-      } catch (e) {
-        console.warn('Failed to sync stock from storage', e);
-      }
+      this.stockItems = this.loadFromStorage('stockItems', []);
+      this.renderStockTable();
+      this.updateOverview();
     });
   }
 
@@ -201,8 +198,9 @@ class StockManager {
 
   populateSourceSelect() {
     const sourceSelect = document.getElementById('receivingSource');
-    sourceSelect.innerHTML = `<option value="">Select source...</option>${
-      this.sources.map((s) => `<option value="${s.id}">${s.name}</option>`).join('')}`;
+    sourceSelect.innerHTML = `<option value="">Select source...</option>${this.sources
+      .map((s) => `<option value="${s.id}">${s.name}</option>`)
+      .join('')}`;
   }
 
   handleReceivingSubmit(e) {
@@ -468,18 +466,6 @@ class StockManager {
     document.getElementById('lowStockItems').textContent = lowStockCount;
     document.getElementById('outOfStockItems').textContent = outOfStockCount;
     document.getElementById('stockValue').textContent = `UGX ${stockValue.toLocaleString()}`;
-  }
-
-  showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : 'info'}"></i> ${message}`;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.classList.add('show'), 100);
-    setTimeout(() => {
-      notification.classList.remove('show');
-      setTimeout(() => document.body.removeChild(notification), 300);
-    }, 3000);
   }
 
   getInitialStock() {

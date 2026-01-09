@@ -4,11 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Support Center - KARIBU GROCERIES .LTD</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="dashboard-container">
@@ -67,16 +71,16 @@
       </div>
 
       <div class="main-content">
-        <div class="sales-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
           <h1>Support Center</h1>
-          <div class="header-actions">
-            <button id="contactSupportBtn" class="btn-primary">
+          <div class="d-flex gap-2">
+            <button id="contactSupportBtn" class="btn btn-primary">
               <i class="fas fa-headset"></i> Contact Support
             </button>
-            <button id="newTicketBtn" class="btn-secondary">
+            <button id="newTicketBtn" class="btn btn-secondary">
               <i class="fas fa-ticket-alt"></i> New Ticket
             </button>
-            <button class="btn-secondary" onclick="handleGlobalLogout(event)">
+            <button class="btn btn-secondary" onclick="handleGlobalLogout(event)">
               <i class="fas fa-sign-out-alt"></i> Logout
             </button>
           </div>
@@ -258,11 +262,15 @@
         </div>
 
         <!-- Recent Tickets -->
-        <div class="recent-sales-section">
-          <div class="section-header-inline">
-            <h2>Your Support Tickets</h2>
-            <div class="filter-controls">
-              <select id="ticketStatusFilter">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h2 class="card-title mb-0">Your Support Tickets</h2>
+              <select
+                id="ticketStatusFilter"
+                class="form-select form-select-sm"
+                style="width: auto"
+              >
                 <option value="">All Status</option>
                 <option value="open">Open</option>
                 <option value="in-progress">In Progress</option>
@@ -270,26 +278,28 @@
                 <option value="closed">Closed</option>
               </select>
             </div>
-          </div>
-          <div class="sales-table-wrapper">
-            <table class="sales-table">
-              <thead>
-                <tr>
-                  <th>Ticket ID</th>
-                  <th>Subject</th>
-                  <th>Category</th>
-                  <th>Priority</th>
-                  <th>Status</th>
-                  <th>Last Updated</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="ticketsTableBody"></tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Ticket ID</th>
+                    <th>Subject</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Last Updated</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="ticketsTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="utils.js"></script>
     <script src="support.js"></script>
     <script src="profile.js"></script>
   </body>

@@ -1,5 +1,6 @@
-class SupportManager {
+class SupportManager extends BaseManager {
   constructor() {
+    super();
     this.tickets = this.getInitialTickets();
     this.init();
   }
@@ -227,28 +228,6 @@ class SupportManager {
 
   formatStatus(status) {
     return status.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-  }
-
-  formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
-  showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}"></i> ${message}`;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.classList.add('show'), 100);
-    setTimeout(() => {
-      notification.classList.remove('show');
-      setTimeout(() => document.body.removeChild(notification), 300);
-    }, 3000);
   }
 
   getInitialTickets() {

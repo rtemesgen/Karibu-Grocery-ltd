@@ -93,18 +93,7 @@ body {
   gap: 1rem;
 }
 
-.login-form input {
-  width: 100%;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 25px;
-  font-size: 1rem;
-  color: #374151;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
+.login-form input,
 .login-select {
   width: 100%;
   padding: 1rem;
@@ -115,6 +104,8 @@ body {
   color: #374151;
   outline: none;
   transition: all 0.3s ease;
+}
+.login-select {
   cursor: pointer;
 }
 
@@ -122,12 +113,7 @@ body {
   color: #6b7280;
 }
 
-.login-form input:focus {
-  background: rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
+.login-form input:focus,
 .login-select:focus {
   background: rgba(255, 255, 255, 1);
   transform: translateY(-2px);
@@ -439,7 +425,6 @@ body {
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
-
 .account-card,
 .metric-card,
 .stock-card,
@@ -452,7 +437,6 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
-
 .account-card h3,
 .metric-card h3,
 .stock-card h3,
@@ -466,7 +450,6 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-
 .account-number,
 .metric-value,
 .stock-number,
@@ -571,15 +554,7 @@ body {
   font-size: 1.125rem;
 }
 
-/* Sales Page Specific Styles */
-.sales-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #d1d5db;
-}
+/* Bootstrap replaces sales-header - removed obsolete styles */
 
 /* Accounts tweaks to match mockup */
 .dashboard-card {
@@ -643,389 +618,15 @@ body {
   border: none;
 }
 
-.sales-header h1 {
-  color: #1f2937;
-  font-size: 2rem;
-  font-weight: 600;
-}
+/* Bootstrap replaces most button and header styles */
 
-.header-actions {
-  display: flex;
-  gap: 1rem;
-}
+/* Bootstrap replaces overview cards - removed obsolete styles */
 
-.btn-primary,
-.btn-secondary {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+/* Bootstrap replaces form styles - removed obsolete styles */
 
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-}
+/* Bootstrap replaces inventory styles - removed obsolete styles */
 
-.btn-primary:hover {
-  background: #2563eb;
-}
-
-.btn-secondary {
-  background: #6b7280;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: #4b5563;
-}
-
-/* Sales Overview Cards */
-.sales-overview {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.overview-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.card-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-}
-
-.sales-icon {
-  background: #dbeafe;
-  color: #3b82f6;
-}
-
-.revenue-icon {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.items-icon {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.profit-icon {
-  background: #f3e8ff;
-  color: #7c3aed;
-}
-
-.card-content h3 {
-  color: #6b7280;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-
-.card-value {
-  color: #1f2937;
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-bottom: 0.25rem;
-}
-
-.card-change {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.card-change.positive {
-  color: #16a34a;
-}
-
-.card-change.negative {
-  color: #ef4444;
-}
-
-/* Sales Form Section */
-.sales-form-section {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-}
-
-.sales-form-section h2 {
-  color: #1f2937;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-}
-
-.form-container {
-  max-width: 800px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  color: #374151;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-}
-
-.form-group textarea {
-  height: 80px;
-  resize: vertical;
-}
-
-.total-section {
-  background: #f9fafb;
-  padding: 1rem;
-  border-radius: 8px;
-  margin: 1rem 0;
-  text-align: right;
-}
-
-.total-display {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-}
-
-.btn-cancel,
-.btn-save {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-cancel {
-  background: #6b7280;
-  color: white;
-}
-
-.btn-cancel:hover {
-  background: #4b5563;
-}
-
-.btn-save {
-  background: #16a34a;
-  color: white;
-}
-
-.btn-save:hover {
-  background: #15803d;
-}
-
-/* Inventory Section */
-.inventory-section {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-}
-
-.inventory-section h2 {
-  color: #1f2937;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-}
-
-.inventory-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
-}
-
-.inventory-item {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 1rem;
-  transition: all 0.2s;
-}
-
-.inventory-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.inventory-item.low-stock {
-  border-color: #f59e0b;
-  background: #fef3c7;
-}
-
-.item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  margin-bottom: 0.5rem;
-}
-
-.item-header h4 {
-  color: #1f2937;
-  font-weight: 600;
-}
-
-.category-badge {
-  background: #e5e7eb;
-  color: #6b7280;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-}
-
-.item-details {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.quantity,
-.price {
-  font-weight: 500;
-  color: #374151;
-}
-
-.stock-status {
-  font-size: 0.875rem;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.in-stock .stock-status {
-  color: #16a34a;
-}
-
-.low-stock .stock-status {
-  color: #d97706;
-}
-
-/* Recent Sales Section */
-.recent-sales-section {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.recent-sales-section h2 {
-  color: #1f2937;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-}
-
-.sales-table-wrapper {
-  overflow-x: auto;
-}
-
-.sales-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.sales-table th,
-.sales-table td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.sales-table th {
-  background: #f9fafb;
-  color: #374151;
-  font-weight: 600;
-}
-
-.sales-table tr:hover {
-  background: #f9fafb;
-}
-
-.btn-edit,
-.btn-delete {
-  background: none;
-  border: none;
-  padding: 0.25rem;
-  margin: 0 0.25rem;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.btn-edit {
-  color: #3b82f6;
-}
-
-.btn-edit:hover {
-  background: #dbeafe;
-}
-
-.btn-delete {
-  color: #ef4444;
-}
-
-.btn-delete:hover {
-  background: #fee2e2;
-}
+/* Bootstrap replaces table and button styles - removed obsolete styles */
 
 /* Notifications */
 .notification {
@@ -1088,71 +689,9 @@ body {
   border-radius: 6px;
 }
 
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-}
+/* Bootstrap replaces status-badge - removed obsolete styles */
 
-.status-badge.in-stock {
-  background: #dcfce7;
-  color: #16a34a;
-}
-.status-badge.low-stock {
-  background: #fef3c7;
-  color: #d97706;
-}
-.status-badge.out-of-stock {
-  background: #fee2e2;
-  color: #ef4444;
-}
-.status-badge.paid {
-  background: #dcfce7;
-  color: #16a34a;
-}
-.status-badge.pending {
-  background: #fef3c7;
-  color: #d97706;
-}
-.status-badge.overdue {
-  background: #fee2e2;
-  color: #ef4444;
-}
-.status-badge.completed {
-  background: #dcfce7;
-  color: #16a34a;
-}
-.status-badge.in-progress {
-  background: #dbeafe;
-  color: #3b82f6;
-}
-
-/* Priority Badges */
-.priority-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.priority-badge.priority-low {
-  background: #e5e7eb;
-  color: #6b7280;
-}
-.priority-badge.priority-medium {
-  background: #fef3c7;
-  color: #d97706;
-}
-.priority-badge.priority-high {
-  background: #fecaca;
-  color: #dc2626;
-}
-.priority-badge.priority-urgent {
-  background: #fecaca;
-  color: #991b1b;
-}
+/* Bootstrap replaces priority-badge - removed obsolete styles */
 
 /* Invoice Item Rows */
 .invoice-item-row {

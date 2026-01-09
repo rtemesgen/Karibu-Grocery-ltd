@@ -1,6 +1,7 @@
 // KARIBU GROCERIES .LTD - JavaScript Application
-class RecordKeeper {
+class RecordKeeper extends BaseManager {
   constructor() {
+    super();
     this.currentView = 'login';
     this.isLoggedIn = false;
     this.records = this.getInitialRecords();
@@ -264,11 +265,17 @@ class RecordKeeper {
         const seed = [
           // Admin user
           {
-            username: 'admin', password: 'admin', role: 'admin', branch: 'Admin',
+            username: 'admin',
+            password: 'admin',
+            role: 'admin',
+            branch: 'Admin',
           },
           // Maganjo Branch
           {
-            username: 'maganjo_manager', password: 'password', role: 'manager', branch: 'Maganjo',
+            username: 'maganjo_manager',
+            password: 'password',
+            role: 'manager',
+            branch: 'Maganjo',
           },
           {
             username: 'maganjo_attendant1',
@@ -284,7 +291,10 @@ class RecordKeeper {
           },
           // Matugga Branch
           {
-            username: 'matugga_manager', password: 'password', role: 'manager', branch: 'Matugga',
+            username: 'matugga_manager',
+            password: 'password',
+            role: 'manager',
+            branch: 'Matugga',
           },
           {
             username: 'matugga_attendant1',

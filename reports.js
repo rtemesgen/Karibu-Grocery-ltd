@@ -1,5 +1,6 @@
-class ReportsManager {
+class ReportsManager extends BaseManager {
   constructor() {
+    super();
     this.reports = this.getInitialReports();
     this.init();
   }
@@ -268,36 +269,6 @@ class ReportsManager {
 
   showReportGenerator() {
     this.showNotification('Report generator would open here with more options', 'info');
-  }
-
-  formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  }
-
-  formatDateTime(dateString) {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
-  showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}"></i> ${message}`;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.classList.add('show'), 100);
-    setTimeout(() => {
-      notification.classList.remove('show');
-      setTimeout(() => document.body.removeChild(notification), 300);
-    }, 3000);
   }
 
   getInitialReports() {

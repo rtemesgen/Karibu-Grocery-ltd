@@ -1,5 +1,6 @@
-class TaskManager {
+class TaskManager extends BaseManager {
   constructor() {
+    super();
     this.tasks = this.getInitialTasks();
     this.currentEditId = null;
     this.init();
@@ -142,29 +143,29 @@ class TaskManager {
                         <div class="task-description">${task.description.substring(0, 50)}...</div>
                     </td>
                     <td>${task.assignedTo}</td>
-                    <td><span class="priority-badge ${priorityClass}">${task.priority.toUpperCase()}</span></td>
+                    <td><span class="badge ${priorityClass}">${task.priority.toUpperCase()}</span></td>
                     <td>${task.category}</td>
                     <td>${this.formatDate(task.dueDate)}</td>
-                    <td><span class="status-badge ${status.class}">${status.text}</span></td>
+                    <td><span class="badge ${status.class}">${status.text}</span></td>
                     <td>
                         ${
   task.status === 'pending'
-    ? `<button class="btn-edit" onclick="taskManager.updateTaskStatus('${task.id}', 'in-progress')" title="Start Task">
+    ? `<button class="btn btn-sm btn-outline-success" onclick="taskManager.updateTaskStatus('${task.id}', 'in-progress')" title="Start Task">
                                 <i class="fas fa-play"></i>
                             </button>`
     : ''
 }
                         ${
   task.status === 'in-progress'
-    ? `<button class="btn-edit" onclick="taskManager.updateTaskStatus('${task.id}', 'completed')" title="Complete Task">
+    ? `<button class="btn btn-sm btn-outline-success" onclick="taskManager.updateTaskStatus('${task.id}', 'completed')" title="Complete Task">
                                 <i class="fas fa-check"></i>
                             </button>`
     : ''
 }
-                        <button class="btn-edit" onclick="taskManager.editTask('${task.id}')" title="Edit">
+                        <button class="btn btn-sm btn-outline-primary" onclick="taskManager.editTask('${task.id}')" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-delete" onclick="taskManager.deleteTask('${task.id}')" title="Delete">
+                        <button class="btn btn-sm btn-outline-danger" onclick="taskManager.deleteTask('${task.id}')" title="Delete">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -194,26 +195,6 @@ class TaskManager {
 
   filterTasks() {
     this.renderTasksTable();
-  }
-
-  formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  }
-
-  showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : 'info'}"></i> ${message}`;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.classList.add('show'), 100);
-    setTimeout(() => {
-      notification.classList.remove('show');
-      setTimeout(() => document.body.removeChild(notification), 300);
-    }, 3000);
   }
 
   getInitialTasks() {
