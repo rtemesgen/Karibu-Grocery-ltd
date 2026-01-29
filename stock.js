@@ -1,536 +1,525 @@
-/* global BaseManager */
-/* eslint-disable class-methods-use-this, radix, no-nested-ternary, no-restricted-globals, no-shadow, max-len */
-class StockManager extends BaseManager {
+/* eslint-disable no-restricted-globals */
+// Stock Management Module - MongoDB Backend
+class StockManager {
   constructor() {
-    super();
-    this.ALLOWED_PRODUCTS = ['Beans', 'Grain Maize', 'Cow peas', 'G-nuts', 'Soybeans'];
-    this.stockItems = this.loadStock();
-    this.sources = this.loadSources();
+    this.apiUrl = 'http://localhost:5000/api/stock';
+    this.items = [];
     this.currentEditId = null;
+    this.currentUser = null;
     this.init();
   }
 
-  loadStock() {
-    return this.loadFromStorage('stockItems', this.getInitialStock());
-  }
-
-  saveStock() {
-    this.saveToStorage('stockItems', this.stockItems);
-  }
-
-  loadSources() {
-    return this.loadFromStorage('suppliers', this.getInitialSources());
-  }
-
-  saveSources() {
-    this.saveToStorage('suppliers', this.sources);
-  }
-
-  getInitialSources() {
-    return [
-      {
-        id: '1',
-        name: 'Maganjo Farm',
-        type: 'farm',
-        branch: 'Maganjo',
-      },
-      {
-        id: '2',
-        name: 'Matugga Farm',
-        type: 'farm',
-        branch: 'Matugga',
-      },
-      {
-        id: '3',
-        name: 'Individual Dealers',
-        type: 'dealer',
-        minQuantity: 1000,
-      },
-      {
-        id: '4',
-        name: 'Other Companies',
-        type: 'company',
-        minQuantity: 1000,
-      },
-    ];
-  }
-
-  init() {
+  async init() {
     this.setupEventListeners();
-    this.setupStorageSync();
-    this.applyBusinessStockPreset();
-    this.enforceBusinessRules();
-    this.renderStockTable();
-    this.updateOverview();
+    await this.loadItems();
+    this.updateStats();
+    this.loadCurrentUser();
   }
 
-  setupStorageSync() {
-    window.addEventListener('storage', (event) => {
-      if (event.key !== 'stockItems') return;
-      this.stockItems = this.loadFromStorage('stockItems', []);
-      this.renderStockTable();
-      this.updateOverview();
-    });
-  }
-
-  applyBusinessStockPreset() {
+  loadCurrentUser() {
     try {
-      const presetFlag = localStorage.getItem('stockPresetApplied');
-      if (presetFlag === '1') return;
-
-      const defaults = {
-        Beans: {
-          sku: 'BEA-001',
-          minStock: 1000,
-          costPrice: 2500,
-          sellingPrice: Math.round(2500 * 1.2),
-        },
-        'Grain Maize': {
-          sku: 'GRM-002',
-          minStock: 1000,
-          costPrice: 2000,
-          sellingPrice: Math.round(2000 * 1.2),
-        },
-        'Cow peas': {
-          sku: 'COP-003',
-          minStock: 1000,
-          costPrice: 3000,
-          sellingPrice: Math.round(3000 * 1.2),
-        },
-        'G-nuts': {
-          sku: 'GNU-004',
-          minStock: 1000,
-          costPrice: 4500,
-          sellingPrice: Math.round(4500 * 1.2),
-        },
-        Soybeans: {
-          sku: 'SOY-005',
-          minStock: 1000,
-          costPrice: 3500,
-          sellingPrice: Math.round(3500 * 1.2),
-        },
-      };
-
-      const items = Object.keys(defaults).map((name) => {
-        const existing = (this.stockItems || []).find((i) => i.name === name) || {};
-        const def = defaults[name];
-        const isBeans = name === 'Beans';
-        const qty = isBeans
-          ? typeof existing.quantity === 'number' && existing.quantity > 0
-            ? existing.quantity
-            : 5000
-          : 0;
-        return {
-          id: existing.id || Date.now().toString() + Math.random().toString().slice(2, 6),
-          name,
-          sku: existing.sku || def.sku,
-          category: 'grains',
-          quantity: qty,
-          minStock: 1000,
-          costPrice: typeof existing.costPrice === 'number' ? existing.costPrice : def.costPrice,
-          sellingPrice: Math.round(
-            ((typeof existing.costPrice === 'number' ? existing.costPrice : def.costPrice) || 0)
-              * 1.2,
-          ),
-          batches: existing.batches || [],
-        };
-      });
-
-      this.stockItems = items;
-      this.saveStock();
-      localStorage.setItem('stockPresetApplied', '1');
-    } catch (e) {
-      console.warn('Failed to apply stock preset', e);
+      const user = JSON.parse(localStorage.getItem('currentUser'));
+      this.currentUser = user || { username: 'System' };
+      // Update profile display
+      const roleElement = document.getElementById('profileRole');
+      const nameElement = document.getElementById('profileName');
+      if (roleElement && nameElement && user) {
+        roleElement.textContent = user.role || 'User';
+        nameElement.textContent = user.username || 'Not logged in';
+      }
+    } catch {
+      this.currentUser = { username: 'System' };
     }
   }
 
-  // Ensure existing records follow: minStock=1000, sellingPrice=cost*1.2
-  enforceBusinessRules() {
-    try {
-      let changed = false;
-      this.stockItems = (this.stockItems || []).map((it) => {
-        const item = { ...it };
-        if (item.minStock !== 1000) {
-          item.minStock = 1000;
-          changed = true;
-        }
-        if (typeof item.costPrice === 'number') {
-          const expectedSell = Math.round((item.costPrice || 0) * 1.2);
-          if (item.sellingPrice !== expectedSell) {
-            item.sellingPrice = expectedSell;
-            changed = true;
-          }
-        }
-        return item;
-      });
-      if (changed) this.saveStock();
-    } catch (e) {
-      console.warn('Failed to enforce business rules', e);
-    }
+  handleLogout(e) {
+    if (e) e.preventDefault();
+    localStorage.removeItem('currentUser');
+    window.location.href = 'index.html';
   }
 
   setupEventListeners() {
+    // Add Item button
+    document.getElementById('addItemBtn')?.addEventListener('click', () => this.showAddItemModal());
+
+    // Stock In/Out buttons
+    document.getElementById('stockInBtn')?.addEventListener('click', () => this.showStockInModal());
     document
-      .getElementById('addItemBtn')
-      .addEventListener('click', () => this.showReceivingModal());
-    document.getElementById('cancelStockBtn').addEventListener('click', () => this.hideForm());
-    document.getElementById('stockForm').addEventListener('submit', (e) => this.handleSubmit(e));
-    document.getElementById('categoryFilter').addEventListener('change', () => this.filterStock());
-    document.getElementById('searchStock').addEventListener('input', () => this.filterStock());
+      .getElementById('stockOutBtn')
+      ?.addEventListener('click', () => this.showStockOutModal());
+
+    // Export button
+    document.getElementById('exportBtn')?.addEventListener('click', () => this.exportToCSV());
+
+    // Logout button
+    document.getElementById('logoutBtn')?.addEventListener('click', (e) => this.handleLogout(e));
+
+    // Item Modal
     document
-      .getElementById('closeReceivingModal')
-      .addEventListener('click', () => this.hideReceivingModal());
+      .getElementById('closeItemModal')
+      ?.addEventListener('click', () => this.hideItemModal());
+    document.getElementById('cancelItemBtn')?.addEventListener('click', () => this.hideItemModal());
+    document.getElementById('itemForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.handleItemSubmit();
+    });
+
+    // Stock In Modal
     document
-      .getElementById('receivingForm')
-      .addEventListener('submit', (e) => this.handleReceivingSubmit(e));
+      .getElementById('closeStockInModal')
+      ?.addEventListener('click', () => this.hideStockInModal());
+    document
+      .getElementById('cancelStockInBtn')
+      ?.addEventListener('click', () => this.hideStockInModal());
+    document.getElementById('stockInForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.handleStockIn();
+    });
+
+    // Stock Out Modal
+    document
+      .getElementById('closeStockOutModal')
+      ?.addEventListener('click', () => this.hideStockOutModal());
+    document
+      .getElementById('cancelStockOutBtn')
+      ?.addEventListener('click', () => this.hideStockOutModal());
+    document.getElementById('stockOutForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.handleStockOut();
+    });
+
+    // Stock In Item selection
+    document
+      .getElementById('stockInItem')
+      ?.addEventListener('change', (e) => this.updateStockInDisplay(e.target.value));
+    document
+      .getElementById('stockOutItem')
+      ?.addEventListener('change', (e) => this.updateStockOutDisplay(e.target.value));
+
+    // Search and filters
+    document.getElementById('searchStock')?.addEventListener('input', () => this.filterAndRender());
+    document
+      .getElementById('categoryFilter')
+      ?.addEventListener('change', () => this.filterAndRender());
+    document
+      .getElementById('stockFilter')
+      ?.addEventListener('change', () => this.filterAndRender());
   }
 
-  showReceivingModal() {
-    document.getElementById('receivingModal').classList.remove('hidden');
-    document.getElementById('receivingForm').reset();
-    document.body.style.overflow = 'hidden';
-    this.populateSourceSelect();
-  }
-
-  hideReceivingModal() {
-    document.getElementById('receivingModal').classList.add('hidden');
-    document.getElementById('receivingForm').reset();
-    document.body.style.overflow = 'auto';
-  }
-
-  populateSourceSelect() {
-    const sourceSelect = document.getElementById('receivingSource');
-    sourceSelect.innerHTML = `<option value="">Select source...</option>${this.sources
-      .map((s) => `<option value="${s.id}">${s.name}</option>`)
-      .join('')}`;
-  }
-
-  handleReceivingSubmit(e) {
-    e.preventDefault();
-    const product = document.getElementById('receivingProduct').value;
-    const sourceId = document.getElementById('receivingSource').value;
-    const quantity = parseInt(document.getElementById('receivingQuantity').value);
-    const costPrice = parseFloat(document.getElementById('receivingCostPrice').value);
-    const sellingPrice = Math.round(
-      (parseFloat(document.getElementById('receivingCostPrice').value) || 0) * 1.2,
-    );
-
-    if (!product || !sourceId || !quantity || !costPrice) {
-      alert('Please fill all fields');
-      return;
-    }
-
-    const source = this.sources.find((s) => s.id === sourceId);
-    if (!source) {
-      alert('Invalid source');
-      return;
-    }
-
-    if (!this.ALLOWED_PRODUCTS.includes(product)) {
-      alert('Only approved products can be received');
-      return;
-    }
-
-    // Validate minimum quantities for dealers and companies
-    if ((source.type === 'dealer' || source.type === 'company') && quantity < 1000) {
-      alert(`Minimum quantity from ${source.name} is 1000 kg`);
-      return;
-    }
-
-    // Find or create stock item
-    let item = this.stockItems.find((i) => i.name === product);
-    if (!item) {
-      item = {
-        id: Date.now().toString(),
-        name: product,
-        sku: this.generateSKU(product),
-        category: 'grains',
-        quantity: 0,
-        minStock: 1000,
-        costPrice,
-        sellingPrice,
-        batches: [],
-      };
-      this.stockItems.push(item);
-    }
-
-    // Add batch record
-    const batch = {
-      id: Date.now().toString(),
-      sourceId,
-      sourceName: source.name,
-      quantity,
-      costPrice,
-      date: new Date().toISOString().slice(0, 10),
-    };
-    if (!item.batches) item.batches = [];
-    item.batches.push(batch);
-
-    // Update quantity and latest prices
-    item.quantity += quantity;
-    item.costPrice = costPrice;
-    item.sellingPrice = sellingPrice;
-
-    this.saveStock();
-    this.enforceBusinessRules();
-    this.recordProcurementTransaction(product, quantity, costPrice * quantity);
-    this.showNotification(
-      `Stock received: ${product} - ${quantity}kg from ${source.name}`,
-      'success',
-    );
-
-    this.renderStockTable();
-    this.updateOverview();
-    this.hideReceivingModal();
-  }
-
-  generateSKU(productName) {
-    const prefix = productName.slice(0, 3).toUpperCase();
-    return `${prefix}-${Date.now().toString().slice(-4)}`;
-  }
-
-  recordProcurementTransaction(itemName, qty, amount) {
+  async loadItems() {
     try {
-      const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-      const txs = JSON.parse(localStorage.getItem('transactions') || '[]');
-      txs.unshift({
-        id: Date.now().toString(),
-        date: new Date().toISOString().slice(0, 10),
-        type: 'procurement',
-        amount,
-        account: 'bank',
-        description: `Procurement - ${itemName} (${qty} kg)`,
-        user: currentUser ? currentUser.username : 'System',
-      });
-      localStorage.setItem('transactions', JSON.stringify(txs));
-
-      const acts = JSON.parse(localStorage.getItem('activityLog') || '[]');
-      acts.unshift({
-        id: Date.now().toString(),
-        action: 'procurement',
-        data: { item: itemName, qty, amount },
-        user: currentUser ? currentUser.username : 'System',
-        timestamp: new Date().toISOString(),
-      });
-      localStorage.setItem('activityLog', JSON.stringify(acts));
+      const response = await fetch(this.apiUrl);
+      if (!response.ok) throw new Error('Failed to load items');
+      this.items = await response.json();
+      this.renderItems();
+      this.populateSelectDropdowns();
     } catch (error) {
-      console.warn('Could not record transaction', error);
+      console.error('Error loading items:', error);
+      this.showNotification('Failed to load stock items - ensure backend is running', 'error');
     }
   }
 
-  showAddForm() {
-    document.getElementById('stockFormSection').style.display = 'block';
-    document.querySelector('.sales-form-section h2').textContent = 'Add New Item';
+  populateSelectDropdowns() {
+    const stockInSelect = document.getElementById('stockInItem');
+    const stockOutSelect = document.getElementById('stockOutItem');
+
+    const options = this.items
+      .map((item) => `<option value="${item._id}">${item.itemName} (${item.itemId})</option>`)
+      .join('');
+
+    if (stockInSelect) stockInSelect.innerHTML = `<option value="">-- Select Item --</option>${options}`;
+    if (stockOutSelect) stockOutSelect.innerHTML = `<option value="">-- Select Item --</option>${options}`;
+  }
+
+  showAddItemModal() {
+    this.currentEditId = null;
+    document.getElementById('itemModalTitle').textContent = 'Add New Item';
+    document.getElementById('itemForm').reset();
+    document.getElementById('itemId').value = `ITEM-${Date.now()}`;
+    document.getElementById('itemModal').classList.remove('hidden');
+  }
+
+  hideItemModal() {
+    document.getElementById('itemModal').classList.add('hidden');
+    document.getElementById('itemForm').reset();
     this.currentEditId = null;
   }
 
-  hideForm() {
-    document.getElementById('stockFormSection').style.display = 'none';
-    document.getElementById('stockForm').reset();
-  }
-
-  handleSubmit(e) {
-    e.preventDefault();
+  async handleItemSubmit() {
     const formData = {
-      id: this.currentEditId || Date.now().toString(),
-      name: document.getElementById('itemName').value,
-      sku: document.getElementById('itemSku').value,
-      category: 'grains',
-      supplier: document.getElementById('supplier').value,
-      quantity: parseInt(document.getElementById('quantity').value),
-      minStock: 1000,
-      costPrice: parseFloat(document.getElementById('costPrice').value),
-      sellingPrice: Math.round((parseFloat(document.getElementById('costPrice').value) || 0) * 1.2),
+      itemName: document.getElementById('itemName').value,
+      category: document.getElementById('itemCategory').value,
+      quantity: parseFloat(document.getElementById('itemQuantity').value),
+      minQuantity: parseFloat(document.getElementById('itemMinQuantity').value),
+      unit: document.getElementById('itemUnit').value,
+      purchasePrice: parseFloat(document.getElementById('itemPurchasePrice').value),
+      sellingPrice: parseFloat(document.getElementById('itemSellingPrice').value),
+      supplier: document.getElementById('itemSupplier').value,
+      warehouse: document.getElementById('itemWarehouse').value,
+      description: document.getElementById('itemDescription').value,
+      user: this.currentUser?.username,
     };
 
-    if (!this.ALLOWED_PRODUCTS.includes(formData.name)) {
-      alert('Only approved products can be added');
+    try {
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error('Failed to save item');
+      await this.loadItems();
+      this.hideItemModal();
+      this.showNotification('Item added successfully', 'success');
+    } catch (error) {
+      console.error('Error saving item:', error);
+      this.showNotification('Failed to save item', 'error');
+    }
+  }
+
+  showStockInModal() {
+    document.getElementById('stockInForm').reset();
+    document.getElementById('stockInModal').classList.remove('hidden');
+  }
+
+  hideStockInModal() {
+    document.getElementById('stockInModal').classList.add('hidden');
+    document.getElementById('stockInForm').reset();
+  }
+
+  updateStockInDisplay(itemId) {
+    const item = this.items.find((i) => i._id === itemId);
+    if (item) {
+      document.getElementById('stockInCurrent').value = `${item.quantity} ${item.unit}`;
+      document.getElementById('stockInUnit').value = item.unit;
+    }
+  }
+
+  async handleStockIn() {
+    const itemId = document.getElementById('stockInItem').value;
+    const quantity = parseFloat(document.getElementById('stockInQuantity').value);
+    const supplier = document.getElementById('stockInSupplier').value;
+    const notes = document.getElementById('stockInNotes').value;
+
+    if (!itemId || !quantity) {
+      this.showNotification('Please fill in all required fields', 'warning');
       return;
     }
 
-    if (this.currentEditId) {
-      const index = this.stockItems.findIndex((item) => item.id === this.currentEditId);
-      const prev = this.stockItems[index];
-      const qtyDelta = formData.quantity - (prev.quantity || 0);
-      this.stockItems[index] = formData;
+    try {
+      const response = await fetch(`${this.apiUrl}/${itemId}/stock-in`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quantity,
+          supplier,
+          notes,
+          user: this.currentUser?.username,
+        }),
+      });
 
-      if (qtyDelta > 0) {
-        this.recordProcurementTransaction(formData.name, qtyDelta, qtyDelta * formData.costPrice);
-      }
+      if (!response.ok) throw new Error('Failed to process stock in');
+      const data = await response.json();
 
-      this.showNotification('Item updated successfully', 'success');
-    } else {
-      this.stockItems.push(formData);
-      this.recordProcurementTransaction(
-        formData.name,
-        formData.quantity,
-        formData.quantity * formData.costPrice,
-      );
-      this.showNotification('Item added successfully', 'success');
+      await this.loadItems();
+      this.hideStockInModal();
+      this.showNotification(`Stock received: +${quantity} ${data.stock.unit}`, 'success');
+    } catch (error) {
+      console.error('Error processing stock in:', error);
+      this.showNotification('Failed to process stock in', 'error');
     }
-
-    this.saveStock();
-    this.enforceBusinessRules();
-    this.renderStockTable();
-    this.updateOverview();
-    this.hideForm();
   }
 
-  editItem(id) {
-    const item = this.stockItems.find((item) => item.id === id);
+  showStockOutModal() {
+    document.getElementById('stockOutForm').reset();
+    document.getElementById('stockOutModal').classList.remove('hidden');
+  }
+
+  hideStockOutModal() {
+    document.getElementById('stockOutModal').classList.add('hidden');
+    document.getElementById('stockOutForm').reset();
+  }
+
+  updateStockOutDisplay(itemId) {
+    const item = this.items.find((i) => i._id === itemId);
     if (item) {
-      this.currentEditId = id;
-      document.getElementById('itemName').value = item.name;
-      document.getElementById('itemSku').value = item.sku;
-      document.getElementById('category').value = item.category;
-      document.getElementById('supplier').value = item.supplier;
-      document.getElementById('quantity').value = item.quantity;
-      document.getElementById('minStock').value = 1000;
-      document.getElementById('costPrice').value = item.costPrice;
-      document.getElementById('sellingPrice').value = Math.round((item.costPrice || 0) * 1.2);
-      document.querySelector('.sales-form-section h2').textContent = 'Edit Item';
-      document.getElementById('stockFormSection').style.display = 'block';
+      document.getElementById('stockOutCurrent').value = `${item.quantity} ${item.unit}`;
+      document.getElementById('stockOutUnit').value = item.unit;
+    }
+  }
+
+  async handleStockOut() {
+    const itemId = document.getElementById('stockOutItem').value;
+    const quantity = parseFloat(document.getElementById('stockOutQuantity').value);
+    const reason = document.getElementById('stockOutReason').value;
+    const reference = document.getElementById('stockOutReference').value;
+    const notes = document.getElementById('stockOutNotes').value;
+
+    if (!itemId || !quantity || !reason) {
+      this.showNotification('Please fill in all required fields', 'warning');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${this.apiUrl}/${itemId}/stock-out`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quantity,
+          reason,
+          reference,
+          notes,
+          user: this.currentUser?.username,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to process stock out');
+      }
+
+      const data = await response.json();
+      await this.loadItems();
+      this.hideStockOutModal();
+      this.showNotification(`Stock removed: -${quantity} ${data.stock.unit}`, 'success');
+    } catch (error) {
+      console.error('Error processing stock out:', error);
+      this.showNotification(error.message || 'Failed to process stock out', 'error');
+    }
+  }
+
+  filterAndRender() {
+    const searchTerm = (document.getElementById('searchStock').value || '').toLowerCase();
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const stockFilter = document.getElementById('stockFilter').value;
+
+    let filtered = this.items;
+
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (item) => item.itemName.toLowerCase().includes(searchTerm)
+          || item.itemId.toLowerCase().includes(searchTerm),
+      );
+    }
+
+    if (categoryFilter) {
+      filtered = filtered.filter((item) => item.category === categoryFilter);
+    }
+
+    if (stockFilter === 'low') {
+      filtered = filtered.filter((item) => item.quantity <= item.minQuantity && item.quantity > 0);
+    } else if (stockFilter === 'out') {
+      filtered = filtered.filter((item) => item.quantity === 0);
+    }
+
+    this.renderFilteredItems(filtered);
+    this.updateStats();
+  }
+
+  renderItems() {
+    this.filterAndRender();
+  }
+
+  renderFilteredItems(items) {
+    const tbody = document.getElementById('stockTableBody');
+
+    if (items.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="12" style="text-align: center; padding: 2rem;">
+            <i class="fas fa-inbox"></i> No items found
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = items
+      .map(
+        (item) => `
+        <tr data-id="${item._id}">
+          <td>${item.itemId}</td>
+          <td><strong>${item.itemName}</strong></td>
+          <td>${item.category}</td>
+          <td style="font-weight: 600;">${item.quantity}</td>
+          <td>${item.unit}</td>
+          <td>${item.minQuantity}</td>
+          <td>${this.getStockStatus(item)}</td>
+          <td>$${item.purchasePrice.toFixed(2)}</td>
+          <td>$${item.sellingPrice.toFixed(2)}</td>
+          <td>${this.getMarginPercent(item)}%</td>
+          <td>${new Date(item.lastRestockDate).toLocaleDateString()}</td>
+          <td>
+            <button class="btn-action edit" data-id="${item._id}" title="Edit">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-action delete" data-id="${item._id}" title="Delete">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `,
+      )
+      .join('');
+
+    tbody.querySelectorAll('.delete').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const { id } = e.target.closest('button').dataset;
+        this.deleteItem(id);
+      });
+    });
+
+    tbody.querySelectorAll('.edit').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const { id } = e.target.closest('button').dataset;
+        this.editItem(id);
+      });
+    });
+  }
+
+  getStockStatus(item) {
+    if (item.quantity === 0) {
+      return '<span class="status-badge danger">Out of Stock</span>';
+    }
+    if (item.quantity <= item.minQuantity) {
+      return '<span class="status-badge warning">Low Stock</span>';
+    }
+    return '<span class="status-badge success">In Stock</span>';
+  }
+
+  getMarginPercent(item) {
+    if (item.purchasePrice === 0) return 0;
+    return (((item.sellingPrice - item.purchasePrice) / item.purchasePrice) * 100).toFixed(1);
+  }
+
+  updateStats() {
+    const lowStockItems = this.items.filter((item) => item.quantity <= item.minQuantity);
+    const outOfStockItems = this.items.filter((item) => item.quantity === 0);
+    const totalValue = this.items.reduce(
+      (sum, item) => sum + item.quantity * item.purchasePrice,
+      0,
+    );
+
+    document.getElementById('totalItems').textContent = this.items.length;
+    document.getElementById('lowStockItems').textContent = lowStockItems.length;
+    document.getElementById('outOfStockItems').textContent = outOfStockItems.length;
+    document.getElementById('totalValue').textContent = `$${totalValue.toLocaleString('en-US', {
+      maximumFractionDigits: 2,
+    })}`;
+
+    if (lowStockItems.length > 0) {
+      document.getElementById('lowStockAlert').style.display = 'block';
+      document.getElementById('lowStockCount').textContent = `${lowStockItems.length} items are running low on stock`;
+    } else {
+      document.getElementById('lowStockAlert').style.display = 'none';
     }
   }
 
   deleteItem(id) {
-    if (confirm('Are you sure you want to delete this item?')) {
-      this.stockItems = this.stockItems.filter((item) => item.id !== id);
-      this.saveStock();
-      this.renderStockTable();
-      this.updateOverview();
-      this.showNotification('Item deleted successfully', 'success');
-    }
-  }
+    if (!confirm('Are you sure you want to delete this item?')) return;
 
-  getStockStatus(item) {
-    if (item.quantity === 0) return { class: 'out-of-stock', text: 'Out of Stock' };
-    if (item.quantity <= item.minStock) return { class: 'low-stock', text: 'Low Stock' };
-    return { class: 'in-stock', text: 'In Stock' };
-  }
-
-  renderStockTable() {
-    const tbody = document.getElementById('stockTableBody');
-    const filteredItems = this.getFilteredItems();
-
-    tbody.innerHTML = filteredItems
-      .map((item) => {
-        const status = this.getStockStatus(item);
-        return `
-                <tr>
-                    <td>${item.sku}</td>
-                    <td>${item.name}</td>
-                    <td>${item.category}</td>
-                    <td>${item.quantity} kg</td>
-                    <td>${item.minStock} kg</td>
-                    <td>UGX ${item.costPrice.toLocaleString()}</td>
-                    <td>UGX ${item.sellingPrice.toLocaleString()}</td>
-                    <td><span class="status-badge ${status.class}">${status.text}</span></td>
-                    <td>
-                        <button class="btn-edit" onclick="stockManager.editItem('${item.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-delete" onclick="stockManager.deleteItem('${item.id}')"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
+    fetch(`${this.apiUrl}/${id}`, { method: 'DELETE' })
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to delete');
+        return res.json();
       })
-      .join('');
+      .then(() => {
+        this.loadItems();
+        this.showNotification('Item deleted successfully', 'success');
+      })
+      .catch((error) => {
+        console.error('Error deleting item:', error);
+        this.showNotification('Failed to delete item', 'error');
+      });
   }
 
-  getFilteredItems() {
-    const categoryFilter = document.getElementById('categoryFilter').value;
-    const searchTerm = document.getElementById('searchStock').value.toLowerCase();
+  editItem(id) {
+    const item = this.items.find((i) => i._id === id);
+    if (!item) return;
 
-    return this.stockItems.filter((item) => {
-      const matchesCategory = !categoryFilter || item.category === categoryFilter;
-      const matchesSearch = !searchTerm
-        || item.name.toLowerCase().includes(searchTerm)
-        || item.sku.toLowerCase().includes(searchTerm);
-      return matchesCategory && matchesSearch;
-    });
+    this.currentEditId = id;
+    document.getElementById('itemModalTitle').textContent = 'Edit Item';
+    document.getElementById('itemId').value = item.itemId;
+    document.getElementById('itemName').value = item.itemName;
+    document.getElementById('itemCategory').value = item.category;
+    document.getElementById('itemUnit').value = item.unit;
+    document.getElementById('itemQuantity').value = item.quantity;
+    document.getElementById('itemMinQuantity').value = item.minQuantity;
+    document.getElementById('itemPurchasePrice').value = item.purchasePrice;
+    document.getElementById('itemSellingPrice').value = item.sellingPrice;
+    document.getElementById('itemSupplier').value = item.supplier || '';
+    document.getElementById('itemWarehouse').value = item.warehouse || 'Main';
+    document.getElementById('itemDescription').value = item.description || '';
+
+    document.getElementById('itemModal').classList.remove('hidden');
   }
 
-  filterStock() {
-    this.renderStockTable();
-  }
-
-  updateOverview() {
-    const totalItems = this.stockItems.reduce((sum, item) => sum + item.quantity, 0);
-    const lowStockCount = this.stockItems.filter(
-      (item) => item.quantity > 0 && item.quantity <= item.minStock,
-    ).length;
-    const outOfStockCount = this.stockItems.filter((item) => item.quantity === 0).length;
-    const stockValue = this.stockItems.reduce(
-      (sum, item) => sum + item.quantity * item.costPrice,
-      0,
-    );
-
-    document.getElementById('totalItems').textContent = `${totalItems.toLocaleString()} kg`;
-    document.getElementById('lowStockItems').textContent = lowStockCount;
-    document.getElementById('outOfStockItems').textContent = outOfStockCount;
-    document.getElementById('stockValue').textContent = `UGX ${stockValue.toLocaleString()}`;
-  }
-
-  getInitialStock() {
-    return [
-      {
-        id: '1',
-        name: 'Beans',
-        sku: 'BEA-001',
-        category: 'grains',
-        quantity: 5000,
-        minStock: 1000,
-        costPrice: 2500,
-        sellingPrice: Math.round(2500 * 1.2),
-        batches: [],
-      },
-      {
-        id: '2',
-        name: 'Grain Maize',
-        sku: 'GRM-002',
-        category: 'grains',
-        quantity: 8000,
-        minStock: 1000,
-        costPrice: 2000,
-        sellingPrice: Math.round(2000 * 1.2),
-        batches: [],
-      },
-      {
-        id: '3',
-        name: 'Cow peas',
-        sku: 'COP-003',
-        category: 'grains',
-        quantity: 3500,
-        minStock: 1000,
-        costPrice: 3000,
-        sellingPrice: Math.round(3000 * 1.2),
-        batches: [],
-      },
-      {
-        id: '4',
-        name: 'G-nuts',
-        sku: 'GNU-004',
-        category: 'grains',
-        quantity: 2000,
-        minStock: 1000,
-        costPrice: 4500,
-        sellingPrice: Math.round(4500 * 1.2),
-        batches: [],
-      },
-      {
-        id: '5',
-        name: 'Soybeans',
-        sku: 'SOY-005',
-        category: 'grains',
-        quantity: 4500,
-        minStock: 1000,
-        costPrice: 3500,
-        sellingPrice: Math.round(3500 * 1.2),
-        batches: [],
-      },
+  exportToCSV() {
+    const headers = [
+      'Item ID',
+      'Item Name',
+      'Category',
+      'Quantity',
+      'Unit',
+      'Min Level',
+      'Purchase Price',
+      'Selling Price',
+      'Margin %',
+      'Supplier',
+      'Last Restock',
     ];
+
+    const rows = this.items.map((item) => [
+      item.itemId,
+      item.itemName,
+      item.category,
+      item.quantity,
+      item.unit,
+      item.minQuantity,
+      item.purchasePrice,
+      item.sellingPrice,
+      this.getMarginPercent(item),
+      item.supplier || '',
+      new Date(item.lastRestockDate).toLocaleDateString(),
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `stock_inventory_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    this.showNotification('Stock list exported to CSV', 'success');
+  }
+
+  showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+      <i class="fas fa-${
+  type === 'success'
+    ? 'check-circle'
+    : type === 'error'
+      ? 'exclamation-circle'
+      : 'info-circle'
+}"></i>
+      ${message}
+    `;
+    document.body.appendChild(notification);
+
+    setTimeout(() => notification.remove(), 3000);
   }
 }
 
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   window.stockManager = new StockManager();
 });

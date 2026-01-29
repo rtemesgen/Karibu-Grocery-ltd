@@ -29,6 +29,15 @@ export default defineConfig([
       "no-alert": "off",
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      // Things to ignore when linting
+      "no-underscore-dangle": ["error", { allow: ["_id", "_assignmentChange"] }],
+      "consistent-return": "off",
+      "no-nested-ternary": "off",
+      "max-len": "off",
+      "class-methods-use-this": "off",
+      "no-param-reassign": ["error", { props: false }],
+      "no-restricted-syntax": "off",
+      "no-await-in-loop": "off",
     },
   },
 ]);

@@ -1,4 +1,4 @@
-/* eslint-disable no-use-before-define, no-restricted-globals, func-names, max-len */
+/* eslint-disable no-use-before-define, no-restricted-globals, func-names */
 // Accounts page script
 (function () {
   // Utilities

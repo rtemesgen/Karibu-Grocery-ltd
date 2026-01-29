@@ -6,14 +6,15 @@ class RecordKeeper {
     this.isLoggedIn = false;
     this.records = this.getInitialRecords();
     this.currentEditId = null;
+    this.apiUrl = 'http://localhost:5000/api';
 
     this.init();
   }
 
   // Initialize the application
-  init() {
-    // Ensure default users exist before any login attempts
-    this.seedDefaultUsersIfNeeded();
+  async init() {
+    // Seed users if needed
+    await this.seedDefaultUsersIfNeeded();
 
     this.setupEventListeners();
     this.showPage('loginPage');
@@ -22,8 +23,6 @@ class RecordKeeper {
     this.setupTabNavigation();
     this.loadCurrentUser();
     this.updateProfileUI();
-    // Backfill transactions and ensure dashboard reflects ledger data
-    this.migrateTransactionsFromModules();
   }
 
   // Setup all event listeners
@@ -201,7 +200,7 @@ class RecordKeeper {
   }
 
   // Login functionality
-  handleLogin() {
+  async handleLogin() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
     const branch = document.getElementById('branch').value.trim();
@@ -211,42 +210,41 @@ class RecordKeeper {
       return;
     }
 
-    // Ensure users are seeded before checking
-    this.seedDefaultUsersIfNeeded();
-
-    // Try to validate against stored users
-    let users = [];
     try {
-      users = JSON.parse(localStorage.getItem('users')) || [];
+      const response = await fetch(`${this.apiUrl}/users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Invalid credentials');
+      }
+
+      const user = await response.json();
+
+      // Successful login
+      this.isLoggedIn = true;
+      this.currentUser = {
+        _id: user._id,
+        username: user.username,
+        role: user.role,
+        branch: user.branch || branch,
+      };
+      this.saveCurrentUser();
+
+      // Update UI
+      this.updateProfileUI();
+      this.showDashboard();
+
+      // Clear form
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('branch').value = '';
     } catch (error) {
-      console.warn('Failed to load users from storage', error);
-      users = [];
+      alert(`Login failed: ${error.message}`);
+      console.error('Login error:', error);
     }
-    // Attempting login
-    const match = users.find((u) => u.username === username && u.password === password);
-    // Login match found or not
-    if (!match) {
-      alert('Invalid credentials');
-      return;
-    }
-
-    // Successful login: assign role and branch (use user's assigned branch if not admin)
-    this.isLoggedIn = true;
-    this.currentUser = {
-      username: match.username,
-      role: match.role,
-      branch: match.branch || branch,
-    };
-    this.saveCurrentUser();
-
-    // Update UI
-    this.updateProfileUI();
-    this.showDashboard();
-
-    // Clear form
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-    document.getElementById('branch').value = '';
   }
 
   // Logout functionality
@@ -261,62 +259,14 @@ class RecordKeeper {
   // ----- Users & Current User storage (role support) -----
 
   seedDefaultUsersIfNeeded() {
-    try {
-      const raw = localStorage.getItem('users');
-      const users = raw ? JSON.parse(raw) : null;
-      if (!users || users.length === 0) {
-        const seed = [
-          // Admin user
-          {
-            username: 'admin',
-            password: 'admin',
-            role: 'admin',
-            branch: 'Admin',
-          },
-          // Maganjo Branch
-          {
-            username: 'maganjo_manager',
-            password: 'password',
-            role: 'manager',
-            branch: 'Maganjo',
-          },
-          {
-            username: 'maganjo_attendant1',
-            password: 'password',
-            role: 'attendant',
-            branch: 'Maganjo',
-          },
-          {
-            username: 'maganjo_attendant2',
-            password: 'password',
-            role: 'attendant',
-            branch: 'Maganjo',
-          },
-          // Matugga Branch
-          {
-            username: 'matugga_manager',
-            password: 'password',
-            role: 'manager',
-            branch: 'Matugga',
-          },
-          {
-            username: 'matugga_attendant1',
-            password: 'password',
-            role: 'attendant',
-            branch: 'Matugga',
-          },
-          {
-            username: 'matugga_attendant2',
-            password: 'password',
-            role: 'attendant',
-            branch: 'Matugga',
-          },
-        ];
-        localStorage.setItem('users', JSON.stringify(seed));
-      }
-    } catch (e) {
-      console.warn('Could not seed users', e);
-    }
+    // Users are now seeded via MongoDB
+    // This endpoint ensures users exist on the backend
+    fetch(`${this.apiUrl}/users/seed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }).catch((error) => {
+      console.warn('Could not seed users', error);
+    });
   }
 
   loadCurrentUser() {
@@ -347,15 +297,16 @@ class RecordKeeper {
     }
   }
 
-  // Compute total sales amount from localStorage transactions for a date range
-
-  computeSalesTotal(fromDate, toDate) {
+  // Compute total sales amount from API transactions for a date range
+  async computeSalesTotal(fromDate, toDate) {
     try {
-      const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+      const response = await fetch(`${this.apiUrl}/transactions/`);
+      const transactions = await response.json();
       return transactions
         .filter((t) => t.type === 'sale' && t.date >= fromDate && t.date <= toDate)
         .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-    } catch {
+    } catch (error) {
+      console.warn('Could not compute sales total', error);
       return 0;
     }
   }
@@ -839,26 +790,24 @@ class RecordKeeper {
       .toISOString()
       .slice(0, 10);
 
-    const todaySales = this.computeSalesTotal(todayStr, todayStr);
-    const monthSales = this.computeSalesTotal(startOfMonth, todayStr);
+    this.computeSalesTotal(todayStr, todayStr).then((todaySales) => {
+      this.computeSalesTotal(startOfMonth, todayStr).then((monthSales) => {
+        const prevMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const prevMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+        const prevStartStr = prevMonthStart.toISOString().slice(0, 10);
+        const prevEndStr = prevMonthEnd.toISOString().slice(0, 10);
 
-    // previous month for growth calculation
-    const prevMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const prevMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
-    const prevStartStr = prevMonthStart.toISOString().slice(0, 10);
-    const prevEndStr = prevMonthEnd.toISOString().slice(0, 10);
-    const prevMonthSales = this.computeSalesTotal(prevStartStr, prevEndStr);
+        this.computeSalesTotal(prevStartStr, prevEndStr).then((prevMonthSales) => {
+          const growthRate = prevMonthSales
+            ? ((monthSales - prevMonthSales) / Math.abs(prevMonthSales)) * 100
+            : 0;
+          const growthLabel = `${growthRate >= 0 ? '+' : ''}${growthRate.toFixed(1)}%`;
 
-    const growthRate = prevMonthSales
-      ? ((monthSales - prevMonthSales) / Math.abs(prevMonthSales)) * 100
-      : 0;
-    const growthLabel = `${growthRate >= 0 ? '+' : ''}${growthRate.toFixed(1)}%`;
+          function fmt(v) {
+            return `$${v.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 0 })}`;
+          }
 
-    function fmt(v) {
-      return `$${v.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 0 })}`;
-    }
-
-    mainContent.innerHTML = `
+          mainContent.innerHTML = `
             <div class="section-header">
                 <h1>Sales Tracking</h1>
                 <p>Monitor and analyze sales performance</p>
@@ -881,6 +830,9 @@ class RecordKeeper {
                 <p>Sales Chart Visualization</p>
             </div>
         `;
+        });
+      });
+    });
   }
 
   // Show Stock section
@@ -1163,127 +1115,65 @@ function saveStoredTransactions(txs) {
   }
 }
 
-function addStoredTransaction(tx) {
+// -----------------------
+// API Helpers for Transactions and Activity Logging
+// -----------------------
+
+// Get transactions from API
+async function getAPITransactions() {
   try {
-    const txs = getStoredTransactions();
-    txs.unshift(tx);
-    saveStoredTransactions(txs);
-  } catch (e) {
-    console.warn('Could not add transaction', e);
+    const response = await fetch('http://localhost:5000/api/transactions/');
+    return await response.json();
+  } catch (error) {
+    console.warn('Could not fetch transactions from API', error);
+    return [];
   }
 }
+
+// Add transaction via API
+async function addAPITransaction(tx) {
+  try {
+    const response = await fetch('http://localhost:5000/api/transactions/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tx),
+    });
+    return await response.json();
+  } catch (error) {
+    console.warn('Could not add transaction via API', error);
+    return null;
+  }
+}
+
+// Log activity via API
+async function addActivityLog(action, data) {
+  try {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const activity = {
+      action,
+      data: data || {},
+      user: currentUser.username || 'System',
+      module: 'app',
+      ipAddress: '127.0.0.1',
+    };
+    const response = await fetch('http://localhost:5000/api/activities/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(activity),
+    });
+    return await response.json();
+  } catch (error) {
+    console.warn('Could not log activity', error);
+    return null;
+  }
+}
+
+// Expose helpers for reuse across modules
+window.getAPITransactions = getAPITransactions;
+window.addAPITransaction = addAPITransaction;
+window.addActivityLog = addActivityLog;
 
 // Expose selected helpers for reuse across modules/pages
 window.formatDate = formatDate;
 window.validateEmail = validateEmail;
 window.validatePhone = validatePhone;
-window.addStoredTransaction = addStoredTransaction;
-
-function addActivityLog(action, data) {
-  try {
-    const a = JSON.parse(localStorage.getItem('activityLog') || '[]');
-    a.unshift({
-      id: Date.now().toString(),
-      action,
-      data: data || {},
-      user: (JSON.parse(localStorage.getItem('currentUser')) || {}).username || 'System',
-      timestamp: new Date().toISOString(),
-    });
-    localStorage.setItem('activityLog', JSON.stringify(a));
-  } catch (e) {
-    console.warn('Could not add activity', e);
-  }
-}
-
-// Idempotent migration to backfill transactions from in-memory modules
-RecordKeeper.prototype.migrateTransactionsFromModules = function migrateTransactions() {
-  try {
-    const txs = getStoredTransactions();
-    let added = 0;
-
-    // helper: check existing by type+amount+date
-    const exists = (type, amount, dateStr, descFragment) => txs.some(
-      (t) => t.type === type
-          && Math.abs((parseFloat(t.amount) || 0) - (parseFloat(amount) || 0)) < 0.01
-          && t.date === dateStr
-          && (descFragment ? (t.description || '').includes(descFragment) : true),
-    );
-
-    // backfill sales
-    if (window.salesManager && Array.isArray(window.salesManager.sales)) {
-      window.salesManager.sales.forEach((sale) => {
-        const date = sale.saleDate || new Date().toISOString().slice(0, 10);
-        if (!exists('sale', sale.total, date, sale.itemName)) {
-          const tx = {
-            id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
-            date,
-            type: 'sale',
-            amount: sale.total,
-            account: 'cash',
-            description: `Sale: ${sale.itemName}`,
-            user: (JSON.parse(localStorage.getItem('currentUser')) || {}).username || 'System',
-          };
-          txs.unshift(tx);
-          added += 1;
-          addActivityLog('migration-add-transaction', {
-            source: 'sales',
-            amount: sale.total,
-            id: tx.id,
-          });
-        }
-      });
-    }
-
-    // backfill paid invoices
-    if (window.invoiceManager && Array.isArray(window.invoiceManager.invoices)) {
-      window.invoiceManager.invoices.forEach((inv) => {
-        if (inv.status === 'paid') {
-          const date = inv.paidDate
-            ? new Date(inv.paidDate).toISOString().slice(0, 10)
-            : inv.invoiceDate || new Date().toISOString().slice(0, 10);
-          if (!exists('invoice-payment', inv.total, date, inv.number)) {
-            const tx = {
-              id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
-              date,
-              type: 'invoice-payment',
-              amount: inv.total,
-              account: 'bank',
-              description: `Payment for ${inv.number}`,
-              user: (JSON.parse(localStorage.getItem('currentUser')) || {}).username || 'System',
-            };
-            txs.unshift(tx);
-            added += 1;
-            addActivityLog('migration-add-transaction', {
-              source: 'invoices',
-              invoice: inv.number,
-              amount: inv.total,
-              id: tx.id,
-            });
-          }
-        }
-      });
-    }
-
-    if (added > 0) {
-      saveStoredTransactions(txs);
-      this.updateStats();
-      // if on reports/dashboard, refresh views where necessary
-      try {
-        if (window.reportsManager) window.reportsManager.renderReportsTable();
-      } catch (error) {
-        console.warn('Failed to refresh reports table', error);
-      }
-      try {
-        if (window.recordKeeper) {
-          /* re-render sales track if visible */
-        }
-      } catch (error) {
-        console.warn('Failed to refresh record keeper view', error);
-      }
-      addActivityLog('migration-complete', { added });
-      console.warn('Migration added', added, 'transactions');
-    }
-  } catch (e) {
-    console.warn('Migration failed', e);
-  }
-};

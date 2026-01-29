@@ -79,13 +79,13 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h1>Task Schedule</h1>
           <div class="d-flex gap-2">
-            <button id="addTaskBtn" class="btn btn-primary">
+            <button id="addTaskBtn" class="btn btn-primary" type="button">
               <i class="fas fa-plus"></i> Add Task
             </button>
-            <button id="calendarViewBtn" class="btn btn-secondary">
+            <button id="calendarViewBtn" class="btn btn-secondary" type="button">
               <i class="fas fa-calendar"></i> Calendar View
             </button>
-            <button class="btn btn-secondary" onclick="handleGlobalLogout(event)">
+            <button class="btn btn-secondary" onclick="handleGlobalLogout(event)" type="button">
               <i class="fas fa-sign-out-alt"></i> Logout
             </button>
           </div>
@@ -100,8 +100,8 @@
                 </div>
                 <div>
                   <h6 class="text-muted mb-1">Total Tasks</h6>
-                  <h4 class="mb-0">45</h4>
-                  <small class="text-success">+5 this week</small>
+                  <h4 class="mb-0" id="totalTasksCount">0</h4>
+                  <small class="text-muted">Live count</small>
                 </div>
               </div>
             </div>
@@ -114,8 +114,8 @@
                 </div>
                 <div>
                   <h6 class="text-muted mb-1">Completed</h6>
-                  <h4 class="mb-0">32</h4>
-                  <small class="text-success">71%</small>
+                  <h4 class="mb-0" id="completedTasksCount">0</h4>
+                  <small class="text-success" id="completedTasksPct">0%</small>
                 </div>
               </div>
             </div>
@@ -128,8 +128,8 @@
                 </div>
                 <div>
                   <h6 class="text-muted mb-1">In Progress</h6>
-                  <h4 class="mb-0">10</h4>
-                  <small class="text-muted">22%</small>
+                  <h4 class="mb-0" id="inProgressTasksCount">0</h4>
+                  <small class="text-muted" id="inProgressTasksPct">0%</small>
                 </div>
               </div>
             </div>
@@ -142,8 +142,8 @@
                 </div>
                 <div>
                   <h6 class="text-muted mb-1">Overdue</h6>
-                  <h4 class="mb-0 text-warning">3</h4>
-                  <small class="text-danger">7%</small>
+                  <h4 class="mb-0 text-warning" id="overdueTasksCount">0</h4>
+                  <small class="text-danger">Auto-updated</small>
                 </div>
               </div>
             </div>
@@ -249,6 +249,12 @@
                   <option value="medium">Medium</option>
                   <option value="low">Low</option>
                 </select>
+                <select id="categoryFilter" class="form-select form-select-sm" style="width: auto">
+                  <option value="">All Categories</option>
+                </select>
+                <select id="assigneeFilter" class="form-select form-select-sm" style="width: auto">
+                  <option value="">All Assignees</option>
+                </select>
                 <input
                   type="text"
                   id="searchTasks"
@@ -275,6 +281,33 @@
               </table>
             </div>
           </div>
+        </div>
+
+        <div class="card shadow-sm mt-4">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="card-title mb-0">Activity Log</h2>
+              <span class="text-muted small">Recent task events</span>
+            </div>
+            <div id="taskActivityLog" class="activity-log"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar Modal -->
+    <!-- Calendar Modal - Custom implementation (no Bootstrap modal JS) -->
+    <div class="custom-modal-overlay" id="calendarModalOverlay" style="display: none">
+      <div class="custom-modal">
+        <div class="custom-modal-header">
+          <h5>Task Calendar</h5>
+          <button type="button" class="custom-modal-close" id="closeCalendarModal">&times;</button>
+        </div>
+        <div class="custom-modal-body">
+          <div id="calendarList" class="calendar-list"></div>
+        </div>
+        <div class="custom-modal-footer">
+          <button type="button" class="btn btn-secondary" id="closeCalendarModalBtn">Close</button>
         </div>
       </div>
     </div>

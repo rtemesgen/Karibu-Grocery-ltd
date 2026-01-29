@@ -82,6 +82,9 @@
             <button id="composeBtn" class="btn btn-primary">
               <i class="fas fa-pen"></i> Compose
             </button>
+            <button id="announcementBtn" class="btn btn-warning">
+              <i class="fas fa-bullhorn"></i> Announce
+            </button>
             <button id="refreshBtn" class="btn btn-secondary">
               <i class="fas fa-sync"></i> Refresh
             </button>
@@ -172,6 +175,29 @@
                   <h3 id="contactName">Select a conversation</h3>
                   <p id="contactStatus">No conversation selected</p>
                 </div>
+                <div class="message-actions" id="messageActions" style="display: none">
+                  <button
+                    class="btn btn-sm btn-outline-secondary"
+                    id="callContactBtn"
+                    title="Start Call"
+                  >
+                    <i class="fas fa-phone"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-secondary"
+                    id="videoCallBtn"
+                    title="Video Call"
+                  >
+                    <i class="fas fa-video"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-secondary"
+                    id="moreOptionsBtn"
+                    title="More Options"
+                  >
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
               </div>
               <div class="message-body" id="messageBody">
                 <div class="no-conversation">
@@ -179,8 +205,18 @@
                   <p>Select a conversation to start messaging</p>
                 </div>
               </div>
+              <div class="typing-indicator" id="typingIndicator" style="display: none">
+                <span></span><span></span><span></span>
+                <small id="typingText">Someone is typing...</small>
+              </div>
               <div class="message-input" id="messageInput" style="display: none">
+                <button class="emoji-btn" id="emojiBtn" title="Add Emoji">
+                  <i class="fas fa-smile"></i>
+                </button>
                 <input type="text" id="newMessage" placeholder="Type your message..." />
+                <button class="attach-btn" id="attachBtn" title="Attach File">
+                  <i class="fas fa-paperclip"></i>
+                </button>
                 <button id="sendBtn" class="btn-primary">
                   <i class="fas fa-paper-plane"></i>
                 </button>
@@ -219,12 +255,164 @@
               <button class="filter-btn" data-filter="system">System</button>
               <button class="filter-btn" data-filter="sales">Sales</button>
               <button class="filter-btn" data-filter="tasks">Tasks</button>
+              <button class="filter-btn" data-filter="urgent">Urgent</button>
+            </div>
+            <div class="d-flex justify-content-end mb-3">
+              <button class="btn btn-sm btn-outline-secondary" id="markAllReadBtn">
+                <i class="fas fa-check-double"></i> Mark All Read
+              </button>
             </div>
             <div class="notifications-list" id="notificationsList"></div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Compose Message Modal -->
+    <div class="custom-modal-overlay" id="composeModalOverlay" style="display: none">
+      <div class="custom-modal compose-modal">
+        <div class="custom-modal-header">
+          <h5><i class="fas fa-pen"></i> New Message</h5>
+          <button type="button" class="custom-modal-close" id="closeComposeModal">&times;</button>
+        </div>
+        <div class="custom-modal-body">
+          <form id="composeForm">
+            <div class="mb-3">
+              <label class="form-label">To</label>
+              <select id="composeRecipient" class="form-select" required>
+                <option value="">Select recipient...</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Priority</label>
+              <div class="priority-selector">
+                <label class="priority-option">
+                  <input type="radio" name="priority" value="normal" checked />
+                  <span class="priority-badge normal"><i class="fas fa-minus"></i> Normal</span>
+                </label>
+                <label class="priority-option">
+                  <input type="radio" name="priority" value="high" />
+                  <span class="priority-badge high"><i class="fas fa-arrow-up"></i> High</span>
+                </label>
+                <label class="priority-option">
+                  <input type="radio" name="priority" value="urgent" />
+                  <span class="priority-badge urgent"
+                    ><i class="fas fa-exclamation"></i> Urgent</span
+                  >
+                </label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Subject</label>
+              <input
+                type="text"
+                id="composeSubject"
+                class="form-control"
+                placeholder="Message subject..."
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Message</label>
+              <textarea
+                id="composeMessage"
+                class="form-control"
+                rows="6"
+                placeholder="Type your message here..."
+                required
+              ></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Attachments</label>
+              <div class="attachment-dropzone" id="attachmentDropzone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Drag files here or click to browse</p>
+                <input type="file" id="attachmentInput" multiple hidden />
+              </div>
+              <div class="attachment-list" id="attachmentList"></div>
+            </div>
+          </form>
+        </div>
+        <div class="custom-modal-footer">
+          <button type="button" class="btn btn-secondary" id="saveDraftBtn">
+            <i class="fas fa-save"></i> Save Draft
+          </button>
+          <button type="button" class="btn btn-primary" id="sendMessageBtn">
+            <i class="fas fa-paper-plane"></i> Send Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Announcement Modal -->
+    <div class="custom-modal-overlay" id="announcementModalOverlay" style="display: none">
+      <div class="custom-modal">
+        <div class="custom-modal-header">
+          <h5><i class="fas fa-bullhorn"></i> New Announcement</h5>
+          <button type="button" class="custom-modal-close" id="closeAnnouncementModal">
+            &times;
+          </button>
+        </div>
+        <div class="custom-modal-body">
+          <form id="announcementForm">
+            <div class="mb-3">
+              <label class="form-label">Audience</label>
+              <select id="announcementAudience" class="form-select" required>
+                <option value="all">All Staff</option>
+                <option value="managers">Managers Only</option>
+                <option value="branch">Specific Branch</option>
+              </select>
+            </div>
+            <div class="mb-3" id="branchSelector" style="display: none">
+              <label class="form-label">Select Branch</label>
+              <select id="announcementBranch" class="form-select">
+                <option value="maganjo">Maganjo</option>
+                <option value="matugga">Matugga</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Priority</label>
+              <select id="announcementPriority" class="form-select">
+                <option value="info">Information</option>
+                <option value="warning">Important</option>
+                <option value="danger">Critical</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Title</label>
+              <input
+                type="text"
+                id="announcementTitle"
+                class="form-control"
+                placeholder="Announcement title..."
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Message</label>
+              <textarea
+                id="announcementMessage"
+                class="form-control"
+                rows="4"
+                placeholder="Announcement content..."
+                required
+              ></textarea>
+            </div>
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" id="announcementPin" />
+              <label class="form-check-label" for="announcementPin">Pin this announcement</label>
+            </div>
+          </form>
+        </div>
+        <div class="custom-modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelAnnouncementBtn">Cancel</button>
+          <button type="button" class="btn btn-primary" id="postAnnouncementBtn">
+            <i class="fas fa-bullhorn"></i> Post Announcement
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="utils.js"></script>
     <script src="communication.js"></script>

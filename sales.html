@@ -100,87 +100,264 @@
             <button id="exportSalesBtn" class="btn btn-secondary">
               <i class="fas fa-download"></i> Export
             </button>
-            <button class="btn btn-secondary" onclick="handleGlobalLogout(event)">
+            <button id="logoutBtn" class="btn btn-secondary">
               <i class="fas fa-sign-out-alt"></i> Logout
             </button>
           </div>
         </div>
 
         <!-- Sales Overview Cards -->
-        <div class="row g-3 mb-4">
-          <div class="col-md-3">
-            <div class="card shadow-sm h-100">
-              <div class="card-body d-flex align-items-center">
-                <div class="me-3 p-3 bg-primary bg-opacity-10 rounded">
-                  <i class="fas fa-chart-line fa-2x text-primary"></i>
-                </div>
-                <div>
-                  <h6 class="text-muted mb-1">Today's Sales</h6>
-                  <h4 class="mb-0" id="todaySalesValue">UGX 0</h4>
-                  <small class="text-success" id="todaySalesChange">+0%</small>
-                </div>
-              </div>
+        <div
+          style="
+            margin-bottom: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.75rem;
+          "
+        >
+          <div
+            style="
+              background: white;
+              padding: 0.875rem;
+              border-radius: 12px;
+              box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+              display: flex;
+              align-items: center;
+              gap: 0.75rem;
+            "
+          >
+            <div
+              style="
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+              "
+            >
+              <i class="fas fa-chart-line" style="color: #3b82f6; font-size: 1.125rem"></i>
+            </div>
+            <div style="flex: 1; min-width: 0">
+              <h3 style="margin: 0; font-size: 0.75rem; color: #6b7280; font-weight: 500">
+                Today's Sales
+              </h3>
+              <p
+                id="todaySalesValue"
+                style="
+                  margin: 0.125rem 0 0 0;
+                  font-size: 1.375rem;
+                  font-weight: 700;
+                  color: #1f2937;
+                  line-height: 1.2;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                "
+              >
+                UGX 0
+              </p>
+              <span id="todaySalesChange" style="font-size: 0.6875rem; color: #10b981">+0%</span>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card shadow-sm h-100">
-              <div class="card-body d-flex align-items-center">
-                <div class="me-3 p-3 bg-success bg-opacity-10 rounded">
-                  <i class="fas fa-dollar-sign fa-2x text-success"></i>
-                </div>
-                <div>
-                  <h6 class="text-muted mb-1">Monthly Revenue</h6>
-                  <h4 class="mb-0" id="monthRevenueValue">UGX 0</h4>
-                  <small class="text-success" id="monthRevenueChange">+0%</small>
-                </div>
-              </div>
+          <div
+            style="
+              background: white;
+              padding: 0.875rem;
+              border-radius: 12px;
+              box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+              display: flex;
+              align-items: center;
+              gap: 0.75rem;
+            "
+          >
+            <div
+              style="
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+              "
+            >
+              <i class="fas fa-dollar-sign" style="color: #10b981; font-size: 1.125rem"></i>
+            </div>
+            <div style="flex: 1; min-width: 0">
+              <h3 style="margin: 0; font-size: 0.75rem; color: #6b7280; font-weight: 500">
+                Monthly Revenue
+              </h3>
+              <p
+                id="monthRevenueValue"
+                style="
+                  margin: 0.125rem 0 0 0;
+                  font-size: 1.375rem;
+                  font-weight: 700;
+                  color: #1f2937;
+                  line-height: 1.2;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                "
+              >
+                UGX 0
+              </p>
+              <span id="monthRevenueChange" style="font-size: 0.6875rem; color: #10b981">+0%</span>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card shadow-sm h-100">
-              <div class="card-body d-flex align-items-center">
-                <div class="me-3 p-3 bg-warning bg-opacity-10 rounded">
-                  <i class="fas fa-shopping-cart fa-2x text-warning"></i>
-                </div>
-                <div>
-                  <h6 class="text-muted mb-1">Items Sold</h6>
-                  <h4 class="mb-0" id="itemsSoldValue">0</h4>
-                  <small class="text-success" id="itemsSoldChange">+0%</small>
-                </div>
-              </div>
+          <div
+            style="
+              background: white;
+              padding: 0.875rem;
+              border-radius: 12px;
+              box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+              display: flex;
+              align-items: center;
+              gap: 0.75rem;
+            "
+          >
+            <div
+              style="
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+              "
+            >
+              <i class="fas fa-shopping-cart" style="color: #f59e0b; font-size: 1.125rem"></i>
+            </div>
+            <div style="flex: 1; min-width: 0">
+              <h3 style="margin: 0; font-size: 0.75rem; color: #6b7280; font-weight: 500">
+                Items Sold
+              </h3>
+              <p
+                id="itemsSoldValue"
+                style="
+                  margin: 0.125rem 0 0 0;
+                  font-size: 1.375rem;
+                  font-weight: 700;
+                  color: #1f2937;
+                  line-height: 1.2;
+                "
+              >
+                0
+              </p>
+              <span id="itemsSoldChange" style="font-size: 0.6875rem; color: #10b981">+0%</span>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card shadow-sm h-100">
-              <div class="card-body d-flex align-items-center">
-                <div class="me-3 p-3 bg-info bg-opacity-10 rounded">
-                  <i class="fas fa-trending-up fa-2x text-info"></i>
-                </div>
-                <div>
-                  <h6 class="text-muted mb-1">Profit Margin</h6>
-                  <h4 class="mb-0" id="profitMarginValue">0%</h4>
-                  <small class="text-success" id="profitMarginChange">+0%</small>
-                </div>
-              </div>
+          <div
+            style="
+              background: white;
+              padding: 0.875rem;
+              border-radius: 12px;
+              box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+              display: flex;
+              align-items: center;
+              gap: 0.75rem;
+            "
+          >
+            <div
+              style="
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+              "
+            >
+              <i class="fas fa-trending-up" style="color: #6366f1; font-size: 1.125rem"></i>
+            </div>
+            <div style="flex: 1; min-width: 0">
+              <h3 style="margin: 0; font-size: 0.75rem; color: #6b7280; font-weight: 500">
+                Profit Margin
+              </h3>
+              <p
+                id="profitMarginValue"
+                style="
+                  margin: 0.125rem 0 0 0;
+                  font-size: 1.375rem;
+                  font-weight: 700;
+                  color: #1f2937;
+                  line-height: 1.2;
+                "
+              >
+                0%
+              </p>
+              <span id="profitMarginChange" style="font-size: 0.6875rem; color: #10b981">+0%</span>
             </div>
           </div>
         </div>
 
-        <!-- Sales Form Section -->
+        <!-- Current Inventory -->
         <div class="card shadow-sm mb-4">
           <div class="card-body">
-            <h2 class="card-title mb-4">Items to Sell</h2>
+            <h2 class="card-title mb-4">Items You Have</h2>
+            <div class="row g-3" id="inventoryGrid">
+              <!-- Inventory items will be populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Sales -->
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h2 class="card-title mb-4">Recent Sales</h2>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Date</th>
+                    <th>Item</th>
+                    <th>Customer</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="salesTableBody">
+                  <!-- Sales will be populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add New Sale Modal -->
+    <div
+      class="modal fade"
+      id="addSaleModal"
+      tabindex="-1"
+      aria-labelledby="addSaleModalLabel"
+      style="display: none; z-index: 1055"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add New Sale</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
             <form id="salesForm">
               <div class="row g-3">
                 <div class="col-md-6">
                   <label for="itemName" class="form-label">Item Name</label>
                   <select id="itemName" class="form-select" required>
                     <option value="">Select product</option>
-                    <option value="Beans">Beans</option>
-                    <option value="Grain Maize">Grain Maize</option>
-                    <option value="Cow peas">Cow peas</option>
-                    <option value="G-nuts">G-nuts</option>
-                    <option value="Soybeans">Soybeans</option>
+                    <!-- Options populated dynamically from available inventory -->
                   </select>
                 </div>
                 <div class="col-md-6">
@@ -234,6 +411,29 @@
                 </div>
               </div>
 
+              <div class="row g-3 mt-2">
+                <div class="col-md-6">
+                  <label for="paymentMethod" class="form-label">Payment Method</label>
+                  <select id="paymentMethod" class="form-select" required>
+                    <option value="cash">Cash</option>
+                    <option value="credit">Credit</option>
+                    <option value="mobile">Mobile Money</option>
+                    <option value="card">Card</option>
+                    <option value="other">Other (specify below)</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="customPaymentMethod" class="form-label">Custom Payment Method</label>
+                  <input
+                    type="text"
+                    id="customPaymentMethod"
+                    class="form-control"
+                    placeholder="Specify if 'Other' selected"
+                    disabled
+                  />
+                </div>
+              </div>
+
               <div class="mt-3">
                 <label for="description" class="form-label">Description (Optional)</label>
                 <textarea
@@ -247,54 +447,19 @@
               <div class="mt-4 p-3 bg-light rounded">
                 <div class="d-flex justify-content-between align-items-center">
                   <strong class="fs-5">Total Amount:</strong>
-                  <strong class="fs-4 text-primary" id="totalAmount">$0.00</strong>
+                  <strong class="fs-4 text-primary" id="totalAmount">UGX 0.00</strong>
                 </div>
               </div>
 
               <div class="d-flex gap-2 justify-content-end mt-4">
-                <button type="button" id="cancelBtn" class="btn btn-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                   <i class="fas fa-times"></i> Cancel
                 </button>
-                <button type="submit" id="saveBtn" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary">
                   <i class="fas fa-save"></i> Save Sale
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-
-        <!-- Current Inventory -->
-        <div class="card shadow-sm mb-4">
-          <div class="card-body">
-            <h2 class="card-title mb-4">Items You Have</h2>
-            <div class="row g-3" id="inventoryGrid">
-              <!-- Inventory items will be populated by JavaScript -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent Sales -->
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h2 class="card-title mb-4">Recent Sales</h2>
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead class="table-light">
-                  <tr>
-                    <th>Date</th>
-                    <th>Item</th>
-                    <th>Customer</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="salesTableBody">
-                  <!-- Sales will be populated by JavaScript -->
-                </tbody>
-              </table>
-            </div>
           </div>
         </div>
       </div>

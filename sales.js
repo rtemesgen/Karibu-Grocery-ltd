@@ -1,58 +1,80 @@
-/* global BaseManager */
-/* eslint-disable class-methods-use-this, no-restricted-globals, prefer-destructuring, no-nested-ternary, no-shadow, max-len */
+/* global BaseManager, bootstrap */
+/* eslint-disable class-methods-use-this, no-restricted-globals, prefer-destructuring, no-nested-ternary, max-len */
 // Sales Management JavaScript
 class SalesManager extends BaseManager {
   constructor() {
     super();
-    this.ALLOWED_PRODUCTS = ['Beans', 'Grain Maize', 'Cow peas', 'G-nuts', 'Soybeans'];
-    this.inventory = this.loadInventory();
-    this.sales = this.getInitialSales();
+    this.apiUrl = 'http://localhost:5000/api';
+    this.inventory = [];
+    this.sales = [];
     this.init();
   }
 
-  loadInventory() {
-    const stored = this.loadFromStorage('stockItems');
-    if (stored) {
-      // Map stockItems to inventory format with selling price
-      return stored.map((item) => ({
-        id: item.id,
-        name: item.name,
-        category: item.category || 'grains',
+  async seedInitialStockIfNeeded() {
+    try {
+      const seededKey = 'initialStockSeeded';
+      if (localStorage.getItem(seededKey)) return;
+
+      const res = await fetch(`${this.apiUrl}/stock/seed-initial`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (res.ok) {
+        localStorage.setItem(seededKey, 'true');
+        console.log('Initial stock items seeded');
+      }
+    } catch (error) {
+      console.warn('Could not seed initial stock', error);
+    }
+  }
+
+  async loadInventoryFromAPI() {
+    try {
+      const res = await fetch(`${this.apiUrl}/stock`);
+      if (!res.ok) throw new Error('Failed to load stock items');
+      const items = await res.json();
+      // Normalize for the UI
+      this.inventory = items.map((item) => ({
+        _id: item._id,
+        itemId: item.itemId,
+        itemName: item.itemName,
+        category: item.category || 'Other',
         quantity: item.quantity || 0,
+        unit: item.unit || 'kg',
         price: item.sellingPrice || 0,
-        costPrice: item.costPrice || 0,
-        minStock: item.minStock || 1000,
+        minStock: item.minQuantity || 0,
       }));
+      this.saveToStorage('stockItems', this.inventory); // keep a lightweight cache
+    } catch (error) {
+      console.warn('Could not load stock from API', error);
+      // fall back to any cached items so UI is not empty
+      const cached = this.loadFromStorage('stockItems', []);
+      this.inventory = cached;
     }
-    return this.getInitialInventory();
   }
 
-  persistInventory() {
-    // Map back to stockItems format with costPrice, minStock, etc.
-    const stockItems = this.inventory.map((item) => ({
-      id: item.id,
-      name: item.name,
-      sku: item.sku || '',
-      category: item.category || 'grains',
-      quantity: item.quantity,
-      minStock: item.minStock || 1000,
-      costPrice: item.costPrice || 0,
-      sellingPrice: item.price,
-      batches: item.batches || [],
-    }));
-    this.saveToStorage('stockItems', stockItems);
+  async loadSalesFromAPI() {
+    try {
+      const res = await fetch(`${this.apiUrl}/sales`);
+      if (!res.ok) throw new Error('Failed to load sales');
+      this.sales = await res.json();
+      this.persistSales();
+    } catch (error) {
+      console.warn('Could not load sales from API', error);
+      this.sales = this.getInitialSales();
+      if (!this.sales || this.sales.length === 0) this.backfillSalesFromTransactions();
+    }
   }
 
-  init() {
+  async init() {
     this.setupEventListeners();
-    // Load persisted sales or backfill from transactions so the table isn't empty on refresh
-    if (!this.sales || this.sales.length === 0) {
-      this.backfillSalesFromTransactions();
-    }
+    this.loadCurrentUser();
+    await this.seedInitialStockIfNeeded();
+    await this.loadInventoryFromAPI();
+    await this.loadSalesFromAPI();
     this.renderInventory();
     this.renderSalesTable();
-    this.setDefaultDate();
-    this.calculateTotal();
     this.updateDashboardMetrics();
 
     // Refresh metrics when transactions or sales change in localStorage
@@ -66,26 +88,120 @@ class SalesManager extends BaseManager {
     });
   }
 
+  loadCurrentUser() {
+    try {
+      const user = JSON.parse(localStorage.getItem('currentUser'));
+      const roleElement = document.getElementById('profileRole');
+      const nameElement = document.getElementById('profileName');
+      if (roleElement && nameElement && user) {
+        roleElement.textContent = user.role || 'User';
+        nameElement.textContent = user.username || 'Not logged in';
+      }
+    } catch {
+      // Default to guest if no user
+    }
+  }
+
+  handleLogout(e) {
+    if (e) e.preventDefault();
+    localStorage.removeItem('currentUser');
+    window.location.href = 'index.html';
+  }
+
   setupEventListeners() {
+    // Add Sale button - opens modal
+    const addSaleBtn = document.getElementById('addSaleBtn');
+    if (addSaleBtn) {
+      addSaleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.showAddSaleModal();
+      });
+    }
+
     // Form calculations
-    document.getElementById('quantity').addEventListener('input', () => this.calculateTotal());
-    document.getElementById('unitPrice').addEventListener('input', () => this.calculateTotal());
+    document.getElementById('quantity')?.addEventListener('input', () => this.calculateTotal());
+    document.getElementById('unitPrice')?.addEventListener('input', () => this.calculateTotal());
+
+    // Payment method custom input toggle
+    document.getElementById('paymentMethod')?.addEventListener('change', (e) => {
+      const customInput = document.getElementById('customPaymentMethod');
+      if (customInput) {
+        customInput.disabled = e.target.value !== 'other';
+        if (e.target.value !== 'other') customInput.value = '';
+      }
+    });
 
     // Form submission
-    document.getElementById('salesForm').addEventListener('submit', (e) => {
+    document.getElementById('salesForm')?.addEventListener('submit', (e) => {
       e.preventDefault();
       this.handleSaleSubmission();
     });
 
-    // Cancel button
-    document.getElementById('cancelBtn').addEventListener('click', () => {
-      this.clearForm();
-    });
-
     // Export button
-    document.getElementById('exportSalesBtn').addEventListener('click', () => {
+    document.getElementById('exportSalesBtn')?.addEventListener('click', () => {
       this.exportSales();
     });
+
+    // Logout button
+    document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+      this.handleLogout(e);
+    });
+  }
+
+  showAddSaleModal() {
+    const modalElement = document.getElementById('addSaleModal');
+    if (!modalElement) return;
+    if (typeof bootstrap === 'undefined') return;
+
+    this.clearForm();
+    this.setDefaultDate();
+    this.populateAvailableItems();
+
+    // Ensure modal starts completely hidden before showing
+    modalElement.classList.remove('show');
+    modalElement.style.display = 'none';
+
+    // Create and show modal
+    const modal = new bootstrap.Modal(modalElement, {
+      backdrop: 'static', // Prevent closing on backdrop click
+      keyboard: true, // Allow ESC to close
+      focus: true, // Focus on modal when opened
+    });
+
+    modal.show();
+
+    // Ensure focus is on the modal after it's shown
+    setTimeout(() => {
+      const firstInput = modalElement.querySelector('select, input, textarea');
+      if (firstInput) firstInput.focus();
+    }, 300);
+  }
+
+  populateAvailableItems() {
+    const itemSelect = document.getElementById('itemName');
+    if (!itemSelect) return;
+
+    // Clear existing options except the first placeholder
+    itemSelect.innerHTML = '<option value="">Select product</option>';
+
+    // Add only items with available stock
+    const availableItems = (this.inventory || []).filter((item) => item.quantity > 0);
+
+    availableItems.forEach((item) => {
+      const option = document.createElement('option');
+      option.value = item._id; // use backend id so we can stock-out later
+      option.textContent = `${item.itemName} (${item.quantity} ${item.unit || 'units'} available)`;
+      itemSelect.appendChild(option);
+    });
+
+    if (availableItems.length === 0) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'No items in stock';
+      option.disabled = true;
+      itemSelect.appendChild(option);
+    }
   }
 
   calculateTotal() {
@@ -101,89 +217,129 @@ class SalesManager extends BaseManager {
     document.getElementById('saleDate').value = today;
   }
 
-  handleSaleSubmission() {
-    const itemName = document.getElementById('itemName').value.trim();
-    const quantity = parseInt(document.getElementById('quantity').value, 10);
-    const unitPrice = parseFloat(document.getElementById('unitPrice').value);
+  async handleSaleSubmission() {
+    const itemId = document.getElementById('itemName').value.trim();
+    const quantity = parseFloat(document.getElementById('quantity').value);
+    let unitPrice = parseFloat(document.getElementById('unitPrice').value);
     const customerName = document.getElementById('customerName').value.trim();
     const saleDate = document.getElementById('saleDate').value;
+    const description = document.getElementById('description').value;
 
-    if (!itemName || !quantity || !unitPrice || !customerName || !saleDate) {
+    if (!itemId || !quantity || !customerName || !saleDate) {
       alert('Please fill all required fields');
       return;
     }
 
-    if (!this.ALLOWED_PRODUCTS.includes(itemName)) {
-      alert('Only approved products can be sold');
+    const stockItem = (this.inventory || []).find((i) => i._id === itemId);
+    if (!stockItem) {
+      alert('Selected item not found in stock');
       return;
     }
 
-    const formData = {
-      id: Date.now().toString(),
-      itemName,
-      category: 'grains',
-      quantity,
-      unitPrice,
-      customerName,
-      saleDate,
-      description: document.getElementById('description').value,
-      total: quantity * unitPrice,
-    };
-
-    // Add to sales list and persist
-    this.sales.unshift(formData);
-    this.persistSales();
-
-    // Update inventory (decrease quantity)
-    this.updateInventory(formData.itemName, formData.quantity);
-
-    // Refresh displays
-    this.renderSalesTable();
-    this.renderInventory();
-
-    // Persist a corresponding transaction to Accounts (localStorage) and record activity
-    try {
-      const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-      const txs = JSON.parse(localStorage.getItem('transactions') || '[]');
-      txs.unshift({
-        id: Date.now().toString(),
-        date: formData.saleDate,
-        type: 'sale',
-        amount: formData.total,
-        account: 'cash',
-        description: `Sale: ${formData.itemName}`,
-        user: currentUser ? currentUser.username : 'System',
-      });
-      localStorage.setItem('transactions', JSON.stringify(txs));
-
-      const acts = JSON.parse(localStorage.getItem('activityLog') || '[]');
-      acts.unshift({
-        id: Date.now().toString(),
-        action: 'add-transaction',
-        data: { source: 'sales', amount: formData.total },
-        user: currentUser ? currentUser.username : 'System',
-        timestamp: new Date().toISOString(),
-      });
-      localStorage.setItem('activityLog', JSON.stringify(acts));
-    } catch (e) {
-      console.warn('Could not write transaction/activity', e);
+    if (quantity > stockItem.quantity) {
+      alert(`Insufficient stock. Available: ${stockItem.quantity} ${stockItem.unit || 'units'}`);
+      return;
     }
 
-    // Clear form
-    this.clearForm();
+    if (!unitPrice || Number.isNaN(unitPrice)) {
+      unitPrice = stockItem.price || 0;
+    }
 
-    // Update dashboard metrics
-    this.updateDashboardMetrics();
+    const currentUser = (() => {
+      try {
+        return JSON.parse(localStorage.getItem('currentUser') || 'null');
+      } catch {
+        return null;
+      }
+    })();
 
-    // Show success message
-    this.showNotification('Sale recorded successfully!', 'success');
+    let paymentMethod = document.getElementById('paymentMethod')?.value || 'cash';
+    if (paymentMethod === 'other') {
+      const custom = document.getElementById('customPaymentMethod')?.value.trim();
+      paymentMethod = custom || 'cash';
+    }
+
+    const salePayload = {
+      clientName: customerName,
+      productId: stockItem.itemId,
+      productName: stockItem.itemName,
+      quantity,
+      unit: stockItem.unit || 'units',
+      unitPrice,
+      total: quantity * unitPrice,
+      saleDate,
+      paymentMethod,
+      status: 'completed',
+      notes: description,
+      user: currentUser?.username || 'System',
+    };
+
+    try {
+      // First, reduce stock on the backend
+      const stockOutRes = await fetch(`${this.apiUrl}/stock/${itemId}/stock-out`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quantity,
+          reason: 'Sale',
+          reference: salePayload.productId,
+          notes: description,
+          user: salePayload.user,
+        }),
+      });
+
+      if (!stockOutRes.ok) {
+        const error = await stockOutRes.json();
+        throw new Error(error.error || 'Failed to update stock');
+      }
+
+      // Record the sale
+      const saleRes = await fetch(`${this.apiUrl}/sales`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(salePayload),
+      });
+
+      if (!saleRes.ok) {
+        const error = await saleRes.json();
+        throw new Error(error.error || 'Failed to save sale');
+      }
+
+      const savedSale = await saleRes.json();
+      this.sales.unshift(savedSale);
+      this.persistSales();
+
+      // Refresh inventory from backend to reflect new quantity
+      await this.loadInventoryFromAPI();
+
+      // Refresh displays
+      this.renderSalesTable();
+      this.renderInventory();
+
+      // Clear form
+      this.clearForm();
+
+      // Close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('addSaleModal'));
+      if (modal) {
+        modal.hide();
+      }
+
+      // Update dashboard metrics
+      this.updateDashboardMetrics();
+
+      this.showNotification('Sale recorded and stock updated', 'success');
+    } catch (error) {
+      console.error('Error processing sale', error);
+      this.showNotification(error.message || 'Failed to record sale', 'error');
+    }
   }
 
-  updateInventory(itemName, soldQuantity) {
-    const item = this.inventory.find((item) => item.name.toLowerCase() === itemName.toLowerCase());
+  updateInventory(itemId, soldQuantity) {
+    const item = (this.inventory || []).find((i) => i._id === itemId);
     if (item) {
       item.quantity = Math.max(0, item.quantity - soldQuantity);
-      this.persistInventory();
+      this.saveToStorage('stockItems', this.inventory);
     }
   }
 
@@ -195,11 +351,12 @@ class SalesManager extends BaseManager {
 
   renderInventory() {
     const inventoryGrid = document.getElementById('inventoryGrid');
+    if (!inventoryGrid) return;
 
-    inventoryGrid.innerHTML = this.inventory
+    inventoryGrid.innerHTML = (this.inventory || [])
       .map((item) => {
-        const minStock = item.minStock || 1000;
-        const isLow = item.quantity <= minStock;
+        const minStock = item.minStock || 0;
+        const isLow = item.quantity <= minStock && item.quantity > 0;
         const isOut = item.quantity === 0;
         const badgeClass = isOut ? 'bg-danger' : isLow ? 'bg-warning' : 'bg-success';
         const statusText = isOut ? 'Out of Stock' : isLow ? 'Low Stock' : 'In Stock';
@@ -209,30 +366,31 @@ class SalesManager extends BaseManager {
             ? '<i class="fas fa-exclamation-triangle"></i>'
             : '<i class="fas fa-check-circle"></i>';
         return `
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title mb-0">${item.name}</h5>
-                                <span class="badge bg-secondary">${item.category}</span>
-                            </div>
-                            <div class="mb-3">
-                                <p class="mb-1 text-muted">Qty: <strong>${item.quantity} kg</strong></p>
-                                <p class="mb-1 text-muted">Price: <strong>UGX ${(item.price || 0).toLocaleString()}</strong></p>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <span class="badge ${badgeClass}">${statusIcon} ${statusText}</span>
-                            </div>
-                        </div>
-                    </div>
+          <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <h5 class="card-title mb-0">${item.itemName}</h5>
+                  <span class="badge bg-secondary">${item.category}</span>
                 </div>
-            `;
+                <div class="mb-3">
+                  <p class="mb-1 text-muted">Qty: <strong>${item.quantity} ${item.unit || 'units'}</strong></p>
+                  <p class="mb-1 text-muted">Price: <strong>UGX ${(item.price || 0).toLocaleString()}</strong></p>
+                </div>
+                <div class="d-flex align-items-center">
+                  <span class="badge ${badgeClass}">${statusIcon} ${statusText}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
       })
       .join('');
   }
 
   renderSalesTable() {
     const tableBody = document.getElementById('salesTableBody');
+    if (!tableBody) return;
 
     if (!this.sales || this.sales.length === 0) {
       tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">No recent sales</td></tr>';
@@ -240,43 +398,55 @@ class SalesManager extends BaseManager {
     }
 
     tableBody.innerHTML = this.sales
-      .map(
-        (sale) => `
-            <tr>
-                <td>${this.formatDate(sale.saleDate)}</td>
-                <td>${sale.itemName}</td>
-                <td>${sale.customerName}</td>
-                <td>${sale.quantity} kg</td>
-                <td>UGX ${(sale.unitPrice || 0).toLocaleString()}</td>
-                <td>UGX ${(sale.total || 0).toLocaleString()}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="salesManager.editSale('${sale.id}')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="salesManager.deleteSale('${sale.id}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `,
-      )
+      .map((sale) => {
+        const saleId = sale._id || sale.id || sale.saleId;
+        const itemName = sale.productName || sale.itemName || '-';
+        const client = sale.clientName || sale.customerName || '-';
+        const qty = sale.quantity || 0;
+        const unit = sale.unit || 'units';
+        const unitPrice = sale.unitPrice || 0;
+        const total = sale.total || qty * unitPrice;
+        const saleDate = sale.saleDate ? this.formatDate(sale.saleDate) : '-';
+        return `
+        <tr>
+          <td>${saleDate}</td>
+          <td>${itemName}</td>
+          <td>${client}</td>
+          <td>${qty} ${unit}</td>
+          <td>UGX ${unitPrice.toLocaleString()}</td>
+          <td>UGX ${total.toLocaleString()}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary" onclick="salesManager.editSale('${saleId}')">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="salesManager.deleteSale('${saleId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+      })
       .join('');
   }
 
   editSale(saleId) {
-    const sale = this.sales.find((s) => s.id === saleId);
+    const sale = this.sales.find((s) => (s._id || s.id || s.saleId) === saleId);
     if (sale) {
       // Populate form with sale data
-      document.getElementById('itemName').value = sale.itemName;
-      document.getElementById('itemCategory').value = sale.category;
+      const matchedItem = (this.inventory || []).find((i) => i.itemName === sale.productName);
+      if (matchedItem) {
+        document.getElementById('itemName').value = matchedItem._id;
+      }
       document.getElementById('quantity').value = sale.quantity;
       document.getElementById('unitPrice').value = sale.unitPrice;
-      document.getElementById('customerName').value = sale.customerName;
-      document.getElementById('saleDate').value = sale.saleDate;
-      document.getElementById('description').value = sale.description || '';
+      document.getElementById('customerName').value = sale.clientName || sale.customerName || '';
+      document.getElementById('saleDate').value = sale.saleDate
+        ? sale.saleDate.toString().slice(0, 10)
+        : '';
+      document.getElementById('description').value = sale.notes || sale.description || '';
 
       // Remove from sales list (will be re-added when saved)
-      this.sales = this.sales.filter((s) => s.id !== saleId);
+      this.sales = this.sales.filter((s) => (s._id || s.id || s.saleId) !== saleId);
       this.renderSalesTable();
 
       this.calculateTotal();
@@ -286,7 +456,7 @@ class SalesManager extends BaseManager {
 
   deleteSale(saleId) {
     if (confirm('Are you sure you want to delete this sale?')) {
-      this.sales = this.sales.filter((s) => s.id !== saleId);
+      this.sales = this.sales.filter((s) => (s._id || s.id || s.saleId) !== saleId);
       this.persistSales();
       this.renderSalesTable();
       this.showNotification('Sale deleted successfully', 'success');
@@ -318,35 +488,35 @@ class SalesManager extends BaseManager {
         id: 1,
         name: 'Beans',
         category: 'grains',
-        quantity: 5000,
+        quantity: 0,
         price: 3500,
       },
       {
         id: 2,
         name: 'Grain Maize',
         category: 'grains',
-        quantity: 8000,
+        quantity: 0,
         price: 3000,
       },
       {
         id: 3,
         name: 'Cow peas',
         category: 'grains',
-        quantity: 3500,
+        quantity: 0,
         price: 4200,
       },
       {
         id: 4,
         name: 'G-nuts',
         category: 'grains',
-        quantity: 2000,
+        quantity: 0,
         price: 6000,
       },
       {
         id: 5,
         name: 'Soybeans',
         category: 'grains',
-        quantity: 4500,
+        quantity: 0,
         price: 5000,
       },
     ];
