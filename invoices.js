@@ -3,13 +3,23 @@
 class InvoiceManager extends BaseManager {
   constructor() {
     super();
-    this.apiBase = 'http://localhost:5000/api';
+    this.apiBase = "http://localhost:5000/api";
     this.invoices = [];
     this.currentEditId = null;
     this.init();
   }
 
+  loadCurrentUser() {
+    try {
+      const user = JSON.parse(localStorage.getItem("currentUser"));
+      this.currentUser = user || { username: "System" };
+    } catch {
+      this.currentUser = { username: "System" };
+    }
+  }
+
   async init() {
+    this.loadCurrentUser();
     this.setupEventListeners();
     await this.loadInvoices();
     this.setDefaultDates();
@@ -18,42 +28,42 @@ class InvoiceManager extends BaseManager {
 
   setupEventListeners() {
     document
-      .getElementById('createInvoiceBtn')
-      .addEventListener('click', () => this.showCreateForm());
-    document.getElementById('cancelInvoiceBtn').addEventListener('click', () => this.hideForm());
-    document.getElementById('invoiceForm').addEventListener('submit', (e) => this.handleSubmit(e));
+      .getElementById("createInvoiceBtn")
+      .addEventListener("click", () => this.showCreateForm());
+    document.getElementById("cancelInvoiceBtn").addEventListener("click", () => this.hideForm());
+    document.getElementById("invoiceForm").addEventListener("submit", (e) => this.handleSubmit(e));
 
     // Save as draft button
-    const saveAsDraftBtn = document.getElementById('saveAsDraftBtn');
+    const saveAsDraftBtn = document.getElementById("saveAsDraftBtn");
     if (saveAsDraftBtn) {
-      saveAsDraftBtn.addEventListener('click', () => this.saveAsDraft());
+      saveAsDraftBtn.addEventListener("click", () => this.saveAsDraft());
     }
 
-    document.getElementById('addItemBtn').addEventListener('click', () => this.addInvoiceItem());
-    document.getElementById('statusFilter').addEventListener('change', () => this.filterInvoices());
+    document.getElementById("addItemBtn").addEventListener("click", () => this.addInvoiceItem());
+    document.getElementById("statusFilter").addEventListener("change", () => this.filterInvoices());
     document
-      .getElementById('searchInvoices')
-      .addEventListener('input', () => this.filterInvoices());
+      .getElementById("searchInvoices")
+      .addEventListener("input", () => this.filterInvoices());
 
-    const exportBtn = document.getElementById('exportInvoicesBtn');
-    if (exportBtn) exportBtn.addEventListener('click', () => this.exportInvoicesTable());
+    const exportBtn = document.getElementById("exportInvoicesBtn");
+    if (exportBtn) exportBtn.addEventListener("click", () => this.exportInvoicesTable());
 
     // Payment terms change
-    const paymentTermsSelect = document.getElementById('paymentTerms');
+    const paymentTermsSelect = document.getElementById("paymentTerms");
     if (paymentTermsSelect) {
-      paymentTermsSelect.addEventListener('change', (e) => {
-        const customTermsRow = document.getElementById('customTermsRow');
+      paymentTermsSelect.addEventListener("change", (e) => {
+        const customTermsRow = document.getElementById("customTermsRow");
         if (customTermsRow) {
-          customTermsRow.style.display = e.target.value === 'Custom' ? 'block' : 'none';
+          customTermsRow.style.display = e.target.value === "Custom" ? "block" : "none";
         }
         this.updateDueDateByTerms(e.target.value);
       });
     }
 
     // Attachment handling
-    const attachmentsInput = document.getElementById('invoiceAttachments');
+    const attachmentsInput = document.getElementById("invoiceAttachments");
     if (attachmentsInput) {
-      attachmentsInput.addEventListener('change', (e) => this.handleAttachments(e));
+      attachmentsInput.addEventListener("change", (e) => this.handleAttachments(e));
     }
 
     // Setup initial item calculation
@@ -61,48 +71,48 @@ class InvoiceManager extends BaseManager {
   }
 
   setupItemCalculations() {
-    const itemsContainer = document.getElementById('invoiceItems');
-    itemsContainer.addEventListener('input', (e) => {
+    const itemsContainer = document.getElementById("invoiceItems");
+    itemsContainer.addEventListener("input", (e) => {
       if (
-        e.target.classList.contains('item-quantity')
-        || e.target.classList.contains('item-price')
-        || e.target.classList.contains('item-discount')
-        || e.target.classList.contains('item-discount-type')
+        e.target.classList.contains("item-quantity") ||
+        e.target.classList.contains("item-price") ||
+        e.target.classList.contains("item-discount") ||
+        e.target.classList.contains("item-discount-type")
       ) {
-        this.updateItemTotal(e.target.closest('.invoice-item-row'));
+        this.updateItemTotal(e.target.closest(".invoice-item-row"));
         this.updateInvoiceTotals();
       }
     });
 
-    itemsContainer.addEventListener('change', (e) => {
-      if (e.target.classList.contains('item-discount-type')) {
-        this.updateItemTotal(e.target.closest('.invoice-item-row'));
+    itemsContainer.addEventListener("change", (e) => {
+      if (e.target.classList.contains("item-discount-type")) {
+        this.updateItemTotal(e.target.closest(".invoice-item-row"));
         this.updateInvoiceTotals();
       }
     });
 
     // Tax rate change
-    const taxRateInput = document.getElementById('taxRate');
+    const taxRateInput = document.getElementById("taxRate");
     if (taxRateInput) {
-      taxRateInput.addEventListener('input', () => this.updateInvoiceTotals());
+      taxRateInput.addEventListener("input", () => this.updateInvoiceTotals());
     }
 
-    itemsContainer.addEventListener('click', (e) => {
-      if (e.target.closest('.btn-remove-item')) {
-        this.removeInvoiceItem(e.target.closest('.invoice-item-row'));
+    itemsContainer.addEventListener("click", (e) => {
+      if (e.target.closest(".btn-remove-item")) {
+        this.removeInvoiceItem(e.target.closest(".invoice-item-row"));
       }
     });
   }
 
   showCreateForm() {
-    document.getElementById('invoiceFormSection').style.display = 'block';
-    document.querySelector('.sales-form-section h2').textContent = 'Create New Invoice';
+    document.getElementById("invoiceFormSection").style.display = "block";
+    document.querySelector(".sales-form-section h2").textContent = "Create New Invoice";
     this.currentEditId = null;
   }
 
   hideForm() {
-    document.getElementById('invoiceFormSection').style.display = 'none';
-    document.getElementById('invoiceForm').reset();
+    document.getElementById("invoiceFormSection").style.display = "none";
+    document.getElementById("invoiceForm").reset();
     this.resetInvoiceItems();
     this.setDefaultDates();
   }
@@ -112,18 +122,18 @@ class InvoiceManager extends BaseManager {
     const dueDate = new Date(today);
     dueDate.setDate(today.getDate() + 30);
 
-    document.getElementById('invoiceDate').value = today.toISOString().split('T')[0];
-    document.getElementById('dueDate').value = dueDate.toISOString().split('T')[0];
+    document.getElementById("invoiceDate").value = today.toISOString().split("T")[0];
+    document.getElementById("dueDate").value = dueDate.toISOString().split("T")[0];
   }
 
   async loadInvoices() {
     try {
       const res = await fetch(`${this.apiBase}/invoices`);
-      if (!res.ok) throw new Error('Failed to load invoices');
+      if (!res.ok) throw new Error("Failed to load invoices");
       const data = await res.json();
       this.invoices = data.map((inv) => this.normalizeInvoice(inv));
     } catch (err) {
-      console.warn('Falling back to seed invoices', err);
+      console.warn("Falling back to seed invoices", err);
       this.invoices = this.getInitialInvoices();
     }
     this.renderInvoicesTable();
@@ -143,19 +153,19 @@ class InvoiceManager extends BaseManager {
       taxRate: inv.taxRate ?? 10,
       tax: inv.tax ?? 0,
       total: inv.total ?? 0,
-      status: inv.status || 'pending',
+      status: inv.status || "pending",
     };
   }
 
   showInvoiceNumberPreview() {
-    const preview = document.getElementById('previewInvoiceNumber');
-    if (preview) preview.textContent = 'Auto-generated on save';
+    const preview = document.getElementById("previewInvoiceNumber");
+    if (preview) preview.textContent = "Auto-generated on save";
   }
 
   addInvoiceItem() {
-    const itemsContainer = document.getElementById('invoiceItems');
-    const itemRow = document.createElement('div');
-    itemRow.className = 'invoice-item-row';
+    const itemsContainer = document.getElementById("invoiceItems");
+    const itemRow = document.createElement("div");
+    itemRow.className = "invoice-item-row";
     itemRow.innerHTML = `
             <div class="form-group">
                 <label>Item Description</label>
@@ -189,23 +199,23 @@ class InvoiceManager extends BaseManager {
   }
 
   removeInvoiceItem(itemRow) {
-    if (document.querySelectorAll('.invoice-item-row').length > 1) {
+    if (document.querySelectorAll(".invoice-item-row").length > 1) {
       itemRow.remove();
       this.updateInvoiceTotals();
     }
   }
 
   updateItemTotal(itemRow) {
-    const quantity = parseFloat(itemRow.querySelector('.item-quantity').value) || 0;
-    const price = parseFloat(itemRow.querySelector('.item-price').value) || 0;
-    const discount = parseFloat(itemRow.querySelector('.item-discount').value) || 0;
-    const discountType = itemRow.querySelector('.item-discount-type').value;
+    const quantity = parseFloat(itemRow.querySelector(".item-quantity").value) || 0;
+    const price = parseFloat(itemRow.querySelector(".item-price").value) || 0;
+    const discount = parseFloat(itemRow.querySelector(".item-discount").value) || 0;
+    const discountType = itemRow.querySelector(".item-discount-type").value;
 
     const subtotal = quantity * price;
     let discountAmount = 0;
 
     if (discount > 0) {
-      if (discountType === 'percentage') {
+      if (discountType === "percentage") {
         discountAmount = subtotal * (discount / 100);
       } else {
         discountAmount = discount;
@@ -213,25 +223,25 @@ class InvoiceManager extends BaseManager {
     }
 
     const total = subtotal - discountAmount;
-    itemRow.querySelector('.item-total').value = `$${total.toFixed(2)}`;
+    itemRow.querySelector(".item-total").value = `$${total.toFixed(2)}`;
   }
 
   updateInvoiceTotals() {
-    const itemRows = document.querySelectorAll('.invoice-item-row');
+    const itemRows = document.querySelectorAll(".invoice-item-row");
     let subtotal = 0;
     let totalDiscount = 0;
 
     itemRows.forEach((row) => {
-      const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
-      const price = parseFloat(row.querySelector('.item-price').value) || 0;
-      const discount = parseFloat(row.querySelector('.item-discount').value) || 0;
-      const discountType = row.querySelector('.item-discount-type').value;
+      const quantity = parseFloat(row.querySelector(".item-quantity").value) || 0;
+      const price = parseFloat(row.querySelector(".item-price").value) || 0;
+      const discount = parseFloat(row.querySelector(".item-discount").value) || 0;
+      const discountType = row.querySelector(".item-discount-type").value;
 
       const itemSubtotal = quantity * price;
       subtotal += itemSubtotal;
 
       if (discount > 0) {
-        if (discountType === 'percentage') {
+        if (discountType === "percentage") {
           totalDiscount += itemSubtotal * (discount / 100);
         } else {
           totalDiscount += discount;
@@ -239,19 +249,19 @@ class InvoiceManager extends BaseManager {
       }
     });
 
-    const taxRate = parseFloat(document.getElementById('taxRate')?.value || 10) / 100;
+    const taxRate = parseFloat(document.getElementById("taxRate")?.value || 10) / 100;
     const afterDiscount = subtotal - totalDiscount;
     const tax = afterDiscount * taxRate;
     const total = afterDiscount + tax;
 
-    document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('discountAmount').textContent = `-$${totalDiscount.toFixed(2)}`;
-    document.getElementById('taxAmount').textContent = `$${tax.toFixed(2)}`;
-    document.getElementById('finalTotal').textContent = `$${total.toFixed(2)}`;
+    document.getElementById("subtotal").textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById("discountAmount").textContent = `-$${totalDiscount.toFixed(2)}`;
+    document.getElementById("taxAmount").textContent = `$${tax.toFixed(2)}`;
+    document.getElementById("finalTotal").textContent = `$${total.toFixed(2)}`;
   }
 
   resetInvoiceItems() {
-    const itemsContainer = document.getElementById('invoiceItems');
+    const itemsContainer = document.getElementById("invoiceItems");
     itemsContainer.innerHTML = `
             <div class="invoice-item-row">
                 <div class="form-group">
@@ -295,7 +305,7 @@ class InvoiceManager extends BaseManager {
     const invoiceData = this.collectInvoiceData();
     if (!invoiceData) return;
 
-    invoiceData.status = isDraft ? 'draft' : 'sent';
+    invoiceData.status = isDraft ? "draft" : "sent";
     invoiceData.createdAt = invoiceData.createdAt || new Date().toISOString();
 
     try {
@@ -320,17 +330,17 @@ class InvoiceManager extends BaseManager {
       this.renderInvoicesTable();
       this.hideForm();
       this.showNotification(
-        `Invoice ${isDraft ? 'saved as draft' : 'sent'} successfully`,
-        'success',
+        `Invoice ${isDraft ? "saved as draft" : "sent"} successfully`,
+        "success"
       );
     } catch (err) {
       console.error(err);
-      this.showNotification('Failed to save invoice', 'danger');
+      this.showNotification("Failed to save invoice", "danger");
     }
   }
 
   renderInvoicesTable() {
-    const tbody = document.getElementById('invoicesTableBody');
+    const tbody = document.getElementById("invoicesTableBody");
     const filteredInvoices = this.getFilteredInvoices();
 
     tbody.innerHTML = filteredInvoices
@@ -346,12 +356,12 @@ class InvoiceManager extends BaseManager {
                     <td><span class="status-badge ${status.class}">${status.text}</span></td>
                     <td>
                         ${
-  invoice.status !== 'paid'
-    ? `<button class="btn-edit" onclick="invoiceManager.markAsPaid('${invoice.id}')" title="Mark as Paid">
+                          invoice.status !== "paid"
+                            ? `<button class="btn-edit" onclick="invoiceManager.markAsPaid('${invoice.id}')" title="Mark as Paid">
                                 <i class="fas fa-check"></i>
                             </button>`
-    : ''
-}
+                            : ""
+                        }
                         <button class="btn-edit" onclick="invoiceManager.viewInvoice('${invoice.id}')" title="View">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -365,19 +375,20 @@ class InvoiceManager extends BaseManager {
                 </tr>
             `;
       })
-      .join('');
+      .join("");
   }
 
   getFilteredInvoices() {
-    const statusFilter = document.getElementById('statusFilter').value;
-    const searchTerm = document.getElementById('searchInvoices').value.toLowerCase();
+    const statusFilter = document.getElementById("statusFilter").value;
+    const searchTerm = document.getElementById("searchInvoices").value.toLowerCase();
 
     return this.invoices.filter((invoice) => {
       const status = this.getInvoiceStatus(invoice);
       const matchesStatus = !statusFilter || status.class === statusFilter;
-      const matchesSearch = !searchTerm
-        || (invoice.invoiceNumber || invoice.number || '').toLowerCase().includes(searchTerm)
-        || invoice.clientName.toLowerCase().includes(searchTerm);
+      const matchesSearch =
+        !searchTerm ||
+        (invoice.invoiceNumber || invoice.number || "").toLowerCase().includes(searchTerm) ||
+        invoice.clientName.toLowerCase().includes(searchTerm);
       return matchesStatus && matchesSearch;
     });
   }
@@ -388,14 +399,14 @@ class InvoiceManager extends BaseManager {
 
   async exportInvoicesTable() {
     await this.ensurePdfLib();
-    const table = document.querySelector('.table-responsive');
+    const table = document.querySelector(".table-responsive");
     if (!table) return;
     const opt = {
       margin: 0.3,
-      filename: 'invoices.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
+      filename: "invoices.pdf",
+      image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' },
+      jsPDF: { unit: "in", format: "letter", orientation: "landscape" },
     };
     window.html2pdf().set(opt).from(table).save();
   }
@@ -420,7 +431,7 @@ class InvoiceManager extends BaseManager {
         unitPrice: item.price,
         discount: item.discount
           ? { type: item.discount.type, value: item.discount.value }
-          : { type: 'percentage', value: 0 },
+          : { type: "percentage", value: 0 },
         amount: item.total,
       })),
       subtotal: invoiceData.subtotal,
@@ -429,34 +440,35 @@ class InvoiceManager extends BaseManager {
       tax: invoiceData.tax,
       total: invoiceData.total,
       status: invoiceData.status,
+      createdBy: this.currentUser?.username || "System",
     };
 
     const isEdit = Boolean(this.currentEditId);
     const url = isEdit
       ? `${this.apiBase}/invoices/${this.currentEditId}`
       : `${this.apiBase}/invoices`;
-    const method = isEdit ? 'PUT' : 'POST';
+    const method = isEdit ? "PUT" : "POST";
 
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error('Invoice save failed');
+    if (!res.ok) throw new Error("Invoice save failed");
     return res.json();
   }
 
   async deleteInvoice(invoiceId) {
-    if (!confirm('Are you sure you want to delete this invoice?')) return;
+    if (!confirm("Are you sure you want to delete this invoice?")) return;
     try {
-      const res = await fetch(`${this.apiBase}/invoices/${invoiceId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Delete failed');
+      const res = await fetch(`${this.apiBase}/invoices/${invoiceId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
       this.invoices = this.invoices.filter((inv) => inv.id !== invoiceId);
       this.renderInvoicesTable();
-      this.showNotification('Invoice deleted', 'success');
+      this.showNotification("Invoice deleted", "success");
     } catch (err) {
       console.error(err);
-      this.showNotification('Failed to delete invoice', 'danger');
+      this.showNotification("Failed to delete invoice", "danger");
     }
   }
 
@@ -465,26 +477,26 @@ class InvoiceManager extends BaseManager {
     if (!invoice) return;
     try {
       const res = await fetch(`${this.apiBase}/invoices/${invoiceId}/mark-paid`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: invoice.total, method: 'cash', reference: 'manual' }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: invoice.total, method: "cash", reference: "manual" }),
       });
-      if (!res.ok) throw new Error('Mark paid failed');
+      if (!res.ok) throw new Error("Mark paid failed");
       const updated = this.normalizeInvoice(await res.json());
       const idx = this.invoices.findIndex((inv) => inv.id === invoiceId);
       if (idx !== -1) this.invoices[idx] = updated;
       this.renderInvoicesTable();
-      this.showNotification('Invoice marked as paid', 'success');
+      this.showNotification("Invoice marked as paid", "success");
     } catch (err) {
       console.error(err);
-      this.showNotification('Failed to mark as paid', 'danger');
+      this.showNotification("Failed to mark as paid", "danger");
     }
   }
 
   viewInvoice(invoiceId) {
     const invoice = this.invoices.find((inv) => inv.id === invoiceId);
     if (invoice) {
-      this.showNotification('Invoice viewer would open here', 'info');
+      this.showNotification("Invoice viewer would open here", "info");
       // In a real app, this would open a detailed invoice view or PDF
     }
   }
@@ -492,59 +504,59 @@ class InvoiceManager extends BaseManager {
   getInitialInvoices() {
     return [
       {
-        id: '1',
-        number: 'INV-1001',
-        clientName: 'ABC Corporation',
-        clientEmail: 'billing@abc-corp.com',
-        invoiceDate: '2025-12-01',
-        dueDate: '2025-12-31',
-        description: 'Web development services',
+        id: "1",
+        number: "INV-1001",
+        clientName: "ABC Corporation",
+        clientEmail: "billing@abc-corp.com",
+        invoiceDate: "2025-12-01",
+        dueDate: "2025-12-31",
+        description: "Web development services",
         total: 2500.0,
-        status: 'paid',
+        status: "paid",
       },
       {
-        id: '2',
-        number: 'INV-1002',
-        clientName: 'XYZ Enterprises',
-        clientEmail: 'finance@xyz-ent.com',
-        invoiceDate: '2025-12-05',
-        dueDate: '2026-01-05',
-        description: 'Consulting services',
+        id: "2",
+        number: "INV-1002",
+        clientName: "XYZ Enterprises",
+        clientEmail: "finance@xyz-ent.com",
+        invoiceDate: "2025-12-05",
+        dueDate: "2026-01-05",
+        description: "Consulting services",
         total: 1800.0,
-        status: 'pending',
+        status: "pending",
       },
       {
-        id: '3',
-        number: 'INV-1003',
-        clientName: 'Tech Solutions LLC',
-        clientEmail: 'accounts@techsol.com',
-        invoiceDate: '2025-11-20',
-        dueDate: '2025-12-10',
-        description: 'Software licensing',
+        id: "3",
+        number: "INV-1003",
+        clientName: "Tech Solutions LLC",
+        clientEmail: "accounts@techsol.com",
+        invoiceDate: "2025-11-20",
+        dueDate: "2025-12-10",
+        description: "Software licensing",
         total: 3200.0,
-        status: 'pending',
+        status: "pending",
       },
     ];
   }
 
   updateDueDateByTerms(terms) {
-    const invoiceDate = new Date(document.getElementById('invoiceDate').value);
+    const invoiceDate = new Date(document.getElementById("invoiceDate").value);
     let daysToAdd = 30;
 
     switch (terms) {
-      case 'Due on Receipt':
+      case "Due on Receipt":
         daysToAdd = 0;
         break;
-      case 'Net 15':
+      case "Net 15":
         daysToAdd = 15;
         break;
-      case 'Net 30':
+      case "Net 30":
         daysToAdd = 30;
         break;
-      case 'Net 45':
+      case "Net 45":
         daysToAdd = 45;
         break;
-      case 'Net 60':
+      case "Net 60":
         daysToAdd = 60;
         break;
       default:
@@ -553,12 +565,12 @@ class InvoiceManager extends BaseManager {
 
     const dueDate = new Date(invoiceDate);
     dueDate.setDate(invoiceDate.getDate() + daysToAdd);
-    document.getElementById('dueDate').value = dueDate.toISOString().split('T')[0];
+    document.getElementById("dueDate").value = dueDate.toISOString().split("T")[0];
   }
 
   handleAttachments(e) {
     const files = Array.from(e.target.files);
-    const attachmentsList = document.getElementById('attachmentsList');
+    const attachmentsList = document.getElementById("attachmentsList");
 
     attachmentsList.innerHTML = files
       .map(
@@ -570,9 +582,9 @@ class InvoiceManager extends BaseManager {
             <i class="fas fa-times"></i>
           </button>
         </div>
-      `,
+      `
       )
-      .join('');
+      .join("");
   }
 
   saveAsDraft() {
@@ -581,30 +593,30 @@ class InvoiceManager extends BaseManager {
 
   collectInvoiceData() {
     // Validate dates
-    const invoiceDate = new Date(document.getElementById('invoiceDate').value);
-    const dueDate = new Date(document.getElementById('dueDate').value);
+    const invoiceDate = new Date(document.getElementById("invoiceDate").value);
+    const dueDate = new Date(document.getElementById("dueDate").value);
 
     if (dueDate <= invoiceDate) {
-      alert('Due date must be after invoice date');
+      alert("Due date must be after invoice date");
       return null;
     }
 
     const items = [];
     let totalDiscount = 0;
 
-    document.querySelectorAll('.invoice-item-row').forEach((row) => {
-      const description = row.querySelector('.item-description').value;
-      const quantity = parseInt(row.querySelector('.item-quantity').value);
-      const price = parseFloat(row.querySelector('.item-price').value);
-      const discount = parseFloat(row.querySelector('.item-discount').value) || 0;
-      const discountType = row.querySelector('.item-discount-type').value;
+    document.querySelectorAll(".invoice-item-row").forEach((row) => {
+      const description = row.querySelector(".item-description").value;
+      const quantity = parseInt(row.querySelector(".item-quantity").value);
+      const price = parseFloat(row.querySelector(".item-price").value);
+      const discount = parseFloat(row.querySelector(".item-discount").value) || 0;
+      const discountType = row.querySelector(".item-discount-type").value;
 
       if (description && quantity && price) {
         const itemSubtotal = quantity * price;
         let itemDiscount = 0;
 
         if (discount > 0) {
-          itemDiscount = discountType === 'percentage' ? itemSubtotal * (discount / 100) : discount;
+          itemDiscount = discountType === "percentage" ? itemSubtotal * (discount / 100) : discount;
           totalDiscount += itemDiscount;
         }
 
@@ -624,7 +636,7 @@ class InvoiceManager extends BaseManager {
       return sum + qty * pr;
     }, 0);
 
-    const taxRate = parseFloat(document.getElementById('taxRate')?.value || 10) / 100;
+    const taxRate = parseFloat(document.getElementById("taxRate")?.value || 10) / 100;
     const afterDiscount = subtotal - totalDiscount;
     const tax = afterDiscount * taxRate;
     const total = afterDiscount + tax;
@@ -634,22 +646,22 @@ class InvoiceManager extends BaseManager {
       invoiceNumber: this.currentEditId
         ? this.invoices.find((i) => i.id === this.currentEditId)?.invoiceNumber || null
         : null, // backend will generate when missing
-      clientName: document.getElementById('clientName').value,
-      clientEmail: document.getElementById('clientEmail').value,
-      clientPhone: document.getElementById('clientPhone')?.value || '',
+      clientName: document.getElementById("clientName").value,
+      clientEmail: document.getElementById("clientEmail").value,
+      clientPhone: document.getElementById("clientPhone")?.value || "",
       clientAddress: {
-        street: document.getElementById('clientStreet')?.value || '',
-        city: document.getElementById('clientCity')?.value || '',
-        country: document.getElementById('clientCountry')?.value || '',
+        street: document.getElementById("clientStreet")?.value || "",
+        city: document.getElementById("clientCity")?.value || "",
+        country: document.getElementById("clientCountry")?.value || "",
       },
-      paymentTerms: document.getElementById('paymentTerms')?.value || 'Net 30',
-      customPaymentTerms: document.getElementById('customPaymentTerms')?.value || '',
-      currency: document.getElementById('currency')?.value || 'UGX',
-      invoiceDate: document.getElementById('invoiceDate').value,
-      dueDate: document.getElementById('dueDate').value,
-      description: document.getElementById('description').value,
-      notes: document.getElementById('invoiceNotes')?.value || '',
-      terms: document.getElementById('invoiceTerms')?.value || '',
+      paymentTerms: document.getElementById("paymentTerms")?.value || "Net 30",
+      customPaymentTerms: document.getElementById("customPaymentTerms")?.value || "",
+      currency: document.getElementById("currency")?.value || "UGX",
+      invoiceDate: document.getElementById("invoiceDate").value,
+      dueDate: document.getElementById("dueDate").value,
+      description: document.getElementById("description").value,
+      notes: document.getElementById("invoiceNotes")?.value || "",
+      terms: document.getElementById("invoiceTerms")?.value || "",
       items,
       subtotal,
       discount: totalDiscount,
@@ -657,8 +669,8 @@ class InvoiceManager extends BaseManager {
       taxRate: taxRate * 100,
       total,
       status: this.currentEditId
-        ? this.invoices.find((inv) => inv.id === this.currentEditId)?.status || 'pending'
-        : 'pending',
+        ? this.invoices.find((inv) => inv.id === this.currentEditId)?.status || "pending"
+        : "pending",
     };
   }
 
@@ -666,8 +678,8 @@ class InvoiceManager extends BaseManager {
     const invoice = this.invoices.find((inv) => inv.id === invoiceId);
     if (!invoice) return;
 
-    const printWindow = window.open('', '_blank');
-    const currencySymbol = this.getCurrencySymbol(invoice.currency || 'UGX');
+    const printWindow = window.open("", "_blank");
+    const currencySymbol = this.getCurrencySymbol(invoice.currency || "UGX");
 
     printWindow.document.write(`
         <!DOCTYPE html>
@@ -698,14 +710,14 @@ class InvoiceManager extends BaseManager {
               <strong>Bill To:</strong><br>
               ${invoice.clientName}<br>
               ${invoice.clientEmail}<br>
-              ${invoice.clientPhone || ''}<br>
-              ${invoice.clientAddress?.street || ''}<br>
-              ${invoice.clientAddress?.city || ''} ${invoice.clientAddress?.country || ''}
+              ${invoice.clientPhone || ""}<br>
+              ${invoice.clientAddress?.street || ""}<br>
+              ${invoice.clientAddress?.city || ""} ${invoice.clientAddress?.country || ""}
             </div>
             <div>
               <strong>Invoice Date:</strong> ${this.formatDate(invoice.invoiceDate)}<br>
               <strong>Due Date:</strong> ${this.formatDate(invoice.dueDate)}<br>
-              <strong>Status:</strong> ${invoice.status || 'pending'}
+              <strong>Status:</strong> ${invoice.status || "pending"}
             </div>
           </div>
         
@@ -721,29 +733,29 @@ class InvoiceManager extends BaseManager {
             </thead>
             <tbody>
               ${invoice.items
-    .map(
-      (item) => `
+                .map(
+                  (item) => `
                 <tr>
                   <td>${item.description}</td>
                   <td>${item.quantity}</td>
                   <td>${currencySymbol}${item.price.toFixed(2)}</td>
-                  <td>${item.discount ? (item.discount.type === 'percentage' ? `${item.discount.value}%` : `${currencySymbol}${item.discount.value}`) : '-'}</td>
+                  <td>${item.discount ? (item.discount.type === "percentage" ? `${item.discount.value}%` : `${currencySymbol}${item.discount.value}`) : "-"}</td>
                   <td>${currencySymbol}${item.total.toFixed(2)}</td>
                 </tr>
-              `,
-    )
-    .join('')}
+              `
+                )
+                .join("")}
             </tbody>
           </table>
         
           <div class="totals">
             <div>Subtotal: ${currencySymbol}${invoice.subtotal.toFixed(2)}</div>
-            ${invoice.discount ? `<div>Discount: -${currencySymbol}${invoice.discount.toFixed(2)}</div>` : ''}
+            ${invoice.discount ? `<div>Discount: -${currencySymbol}${invoice.discount.toFixed(2)}</div>` : ""}
             <div>Tax (${invoice.taxRate || 10}%): ${currencySymbol}${invoice.tax.toFixed(2)}</div>
             <div class="total-amount">Total: ${currencySymbol}${invoice.total.toFixed(2)}</div>
           </div>
         
-          ${invoice.terms ? `<div style="margin-top: 30px;"><strong>Terms & Conditions:</strong><br>${invoice.terms}</div>` : ''}
+          ${invoice.terms ? `<div style="margin-top: 30px;"><strong>Terms & Conditions:</strong><br>${invoice.terms}</div>` : ""}
         
           <button onclick="window.print()" style="margin-top: 30px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Print Invoice</button>
         </body>
@@ -757,7 +769,7 @@ class InvoiceManager extends BaseManager {
     const invoice = this.invoices.find((inv) => inv.id === invoiceId);
     if (!invoice) return;
     await this.ensurePdfLib();
-    const currencySymbol = this.getCurrencySymbol(invoice.currency || 'UGX');
+    const currencySymbol = this.getCurrencySymbol(invoice.currency || "UGX");
 
     const html = `
         <div style="font-family: Arial, sans-serif; padding: 24px; max-width: 900px;">
@@ -768,16 +780,16 @@ class InvoiceManager extends BaseManager {
           <div style="display:flex; justify-content: space-between; margin-bottom:16px;">
             <div>
               <strong>Bill To:</strong><br>
-              ${invoice.clientName || ''}<br>
-              ${invoice.clientEmail || ''}<br>
-              ${invoice.clientPhone || ''}<br>
-              ${invoice.clientAddress?.street || ''}<br>
-              ${[invoice.clientAddress?.city, invoice.clientAddress?.country].filter(Boolean).join(' ')}
+              ${invoice.clientName || ""}<br>
+              ${invoice.clientEmail || ""}<br>
+              ${invoice.clientPhone || ""}<br>
+              ${invoice.clientAddress?.street || ""}<br>
+              ${[invoice.clientAddress?.city, invoice.clientAddress?.country].filter(Boolean).join(" ")}
             </div>
             <div style="text-align:right;">
               <div><strong>Invoice Date:</strong> ${this.formatDate(invoice.invoiceDate)}</div>
               <div><strong>Due Date:</strong> ${this.formatDate(invoice.dueDate)}</div>
-              <div><strong>Status:</strong> ${invoice.status || 'pending'}</div>
+              <div><strong>Status:</strong> ${invoice.status || "pending"}</div>
             </div>
           </div>
           <table style="width:100%; border-collapse: collapse; margin-bottom: 12px;">
@@ -792,36 +804,36 @@ class InvoiceManager extends BaseManager {
             </thead>
             <tbody>
               ${invoice.items
-    .map(
-      (item) => `
+                .map(
+                  (item) => `
                   <tr>
                     <td style="border:1px solid #ddd; padding:8px;">${item.description}</td>
                     <td style="border:1px solid #ddd; padding:8px;">${item.quantity}</td>
                     <td style="border:1px solid #ddd; padding:8px;">${currencySymbol}${(item.price ?? item.unitPrice ?? 0).toFixed(2)}</td>
-                    <td style="border:1px solid #ddd; padding:8px;">${item.discount ? (item.discount.type === 'percentage' ? `${item.discount.value}%` : `${currencySymbol}${item.discount.value}`) : '-'}</td>
+                    <td style="border:1px solid #ddd; padding:8px;">${item.discount ? (item.discount.type === "percentage" ? `${item.discount.value}%` : `${currencySymbol}${item.discount.value}`) : "-"}</td>
                     <td style="border:1px solid #ddd; padding:8px;">${currencySymbol}${(item.total ?? item.amount ?? 0).toFixed(2)}</td>
                   </tr>
-                `,
-    )
-    .join('')}
+                `
+                )
+                .join("")}
             </tbody>
           </table>
           <div style="text-align:right; margin-top: 8px;">
             <div>Subtotal: ${currencySymbol}${(invoice.subtotal ?? 0).toFixed(2)}</div>
-            ${invoice.discount ? `<div>Discount: -${currencySymbol}${invoice.discount.toFixed(2)}</div>` : ''}
+            ${invoice.discount ? `<div>Discount: -${currencySymbol}${invoice.discount.toFixed(2)}</div>` : ""}
             <div>Tax (${invoice.taxRate || 10}%): ${currencySymbol}${(invoice.tax ?? 0).toFixed(2)}</div>
             <div style="font-size:18px; font-weight:bold; margin-top:4px;">Total: ${currencySymbol}${(invoice.total ?? 0).toFixed(2)}</div>
           </div>
-          ${invoice.terms ? `<div style="margin-top:12px;"><strong>Terms:</strong><br>${invoice.terms}</div>` : ''}
+          ${invoice.terms ? `<div style="margin-top:12px;"><strong>Terms:</strong><br>${invoice.terms}</div>` : ""}
         </div>
       `;
 
     const opt = {
       margin: 0.3,
-      filename: `${invoice.invoiceNumber || 'invoice'}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      filename: `${invoice.invoiceNumber || "invoice"}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
     };
     window.html2pdf().set(opt).from(html).save();
   }
@@ -829,8 +841,9 @@ class InvoiceManager extends BaseManager {
   async ensurePdfLib() {
     if (window.html2pdf) return;
     await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      const script = document.createElement("script");
+      script.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
       script.onload = () => resolve();
       script.onerror = reject;
       document.body.appendChild(script);
@@ -839,15 +852,15 @@ class InvoiceManager extends BaseManager {
 
   getCurrencySymbol(currency) {
     const symbols = {
-      UGX: 'UGX ',
-      USD: '$',
-      EUR: '€',
-      GBP: '£',
+      UGX: "UGX ",
+      USD: "$",
+      EUR: "€",
+      GBP: "£",
     };
     return symbols[currency] || `${currency} `;
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   window.invoiceManager = new InvoiceManager();
 });

@@ -9,7 +9,17 @@ class TaskManager extends BaseManager {
     this.activityLog = this.loadActivityLog();
   }
 
+  loadCurrentUser() {
+    try {
+      const user = JSON.parse(localStorage.getItem('currentUser'));
+      this.currentUser = user || { username: 'User' };
+    } catch {
+      this.currentUser = { username: 'User' };
+    }
+  }
+
   async init() {
+    this.loadCurrentUser();
     try {
       // Debug: Check if button exists and is visible
       const addBtn = document.getElementById('addTaskBtn');
@@ -305,7 +315,7 @@ class TaskManager extends BaseManager {
         dueDate: taskData.dueDate,
         category: taskData.category,
         notes: taskData.description, // Backend uses notes field
-        createdBy: 'User',
+        createdBy: this.currentUser?.username || 'User',
       };
 
       const method = taskId ? 'PUT' : 'POST';
@@ -693,7 +703,7 @@ class TaskManager extends BaseManager {
       action,
       taskId: task.id,
       title: task.title,
-      user: 'System',
+      user: this.currentUser?.username || 'System',
       timestamp: new Date().toISOString(),
     };
     this.activityLog.unshift(entry);
